@@ -79,5 +79,3 @@ export const FriendsApi = {
     return data;
   },
 };
-
-

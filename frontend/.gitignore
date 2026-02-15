@@ -48,3 +48,6 @@ local.properties
 # IDE
 .idea/
 .vscode/
+
+# Tamagui
+.tamagui/
