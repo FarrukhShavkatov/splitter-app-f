@@ -1,7 +1,19 @@
 import axios, { AxiosError } from 'axios';
 import { getToken } from '@/shared/lib/utils/token-storage';
 import { emitUnauthorized } from '@/shared/api/auth-events';
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+
+export class ApiError extends Error {
+  status?: number;
+  code?: string;
+
+  constructor(message: string, options?: { status?: number; code?: string }) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = options?.status;
+    this.code = options?.code;
+  }
+}
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -64,26 +76,44 @@ apiClient.interceptors.response.use(
       const data = error.response.data as any;
       const serverMsg: string | undefined =
         typeof data === 'string' ? data : data?.message || data?.error;
+      const requestUrl = String(error.config?.url || '');
+      const isAuthLoginOrRegister = /\/auth\/(login|register)\b/.test(requestUrl);
 
       switch (status) {
         case 401:
-          emitUnauthorized();
-          throw new Error(serverMsg || 'Authorization failed');
+          if (!isAuthLoginOrRegister) {
+            emitUnauthorized();
+          }
+          throw new ApiError(
+            serverMsg || (isAuthLoginOrRegister ? 'Invalid email or password.' : 'Authorization failed'),
+            { status, code: isAuthLoginOrRegister ? 'INVALID_CREDENTIALS' : 'UNAUTHORIZED' }
+          );
+        case 409:
+          throw new ApiError(serverMsg || 'Account with this email or username already exists.', {
+            status,
+            code: 'ACCOUNT_EXISTS',
+          });
         case 422:
-          throw new Error(serverMsg || 'Validation error');
+          throw new ApiError(serverMsg || 'Validation error', { status, code: 'VALIDATION_ERROR' });
         case 500:
-          throw new Error(serverMsg || 'Server error. Please try again later.');
+          throw new ApiError(serverMsg || 'Server error. Please try again later.', {
+            status,
+            code: 'SERVER_ERROR',
+          });
         default:
-          throw new Error(serverMsg || `Request failed (${status})`);
+          throw new ApiError(serverMsg || `Request failed (${status})`, {
+            status,
+            code: 'REQUEST_FAILED',
+          });
       }
     } else if (error.request) {
       if (String(error.message).toLowerCase().includes('network')) {
-        throw new Error('Network error. Please check your connection.');
+        throw new ApiError('Network error. Please check your connection.', { code: 'NETWORK_ERROR' });
       }
-      throw new Error('No response received. Possible CORS issue.');
+      throw new ApiError('No response received. Possible CORS issue.', { code: 'NO_RESPONSE' });
     }
 
-    throw new Error('Unexpected error while performing the request.');
+    throw new ApiError('Unexpected error while performing the request.', { code: 'UNKNOWN_ERROR' });
   }
 );
 export interface LoginRequest {
@@ -156,21 +186,25 @@ export async function getCurrentUser(token?: string): Promise<User> {
  * Параметр token не обязателен — интерсептор и так подставит.
  */
 export async function logout(token?: string): Promise<void> {
-  await apiClient.post(
-    '/auth/logout',
-    {},
-    {
-      headers: token
-        ? (h => {
-            if (typeof (h as any).set === 'function') {
-              (h as any).set('Authorization', `Bearer ${token}`);
-              return h;
-            }
-            return { ...(h || {}), Authorization: `Bearer ${token}` };
-          })((apiClient.defaults.headers.common as any) ?? {})
-        : undefined,
-    }
-  );
+  try {
+    await apiClient.post(
+      '/auth/logout',
+      {},
+      {
+        headers: token
+          ? (h => {
+              if (typeof (h as any).set === 'function') {
+                (h as any).set('Authorization', `Bearer ${token}`);
+                return h;
+              }
+              return { ...(h || {}), Authorization: `Bearer ${token}` };
+            })((apiClient.defaults.headers.common as any) ?? {})
+          : undefined,
+      }
+    );
+  } catch {
+    // Backend may not expose /auth/logout; local token cleanup is handled in store.
+  }
 }
 /**
  * POST /uploads/avatar
@@ -198,10 +232,7 @@ export interface UpdateAvatarPayload {
  * Updates the current user's avatar URL.
  */
 export async function updateAvatar(payload: UpdateAvatarPayload): Promise<User> {
-  const response = await apiClient.patch<User | null>('/users/me/avatar', payload);
-  if (response.data) {
-    return response.data;
-  }
+  await apiClient.patch('/users/me/avatar', payload);
   return getCurrentUser();
 }
 
@@ -255,9 +286,6 @@ export async function changePassword(payload: ChangePasswordPayload): Promise<vo
  * Resets the current user's avatar to default (null in DB).
  */
 export async function resetAvatar(): Promise<User> {
-  const response = await apiClient.delete<User | null>('/users/me/avatar');
-  if (response.data) {
-    return response.data;
-  }
+  await apiClient.delete('/users/me/avatar');
   return getCurrentUser();
 }

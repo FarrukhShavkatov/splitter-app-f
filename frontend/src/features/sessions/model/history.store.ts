@@ -54,6 +54,7 @@ const normalizeEntry = (raw: SessionHistoryEntryRaw): SessionHistoryEntry => {
 
   const grandTotal =
     typeof raw.grandTotal === 'number' ? raw.grandTotal : p?.totals?.grandTotal ?? 0;
+  const currency = raw.currency ?? p?.totals?.currency;
 
   return {
     sessionId: raw.sessionId ?? p?.sessionId ?? 0,
@@ -61,6 +62,7 @@ const normalizeEntry = (raw: SessionHistoryEntryRaw): SessionHistoryEntry => {
     finalizedAt,
     createdAt,
     grandTotal,
+    currency,
     participantUniqueIds: raw.participantUniqueIds ?? [],
     totals: p?.totals,
     allocations: p?.allocations ?? [],

@@ -61,7 +61,13 @@ export default function GroupDetailsScreen() {
       .map((f: any) => {
         const uid = f?.user?.uniqueId ?? f?.uniqueId ?? '';
         const label = f?.user?.displayName || f?.user?.username || f?.displayName || f?.username || uid;
-        return { uniqueId: uid, username: label, displayName: f?.user?.displayName ?? f?.displayName };
+        const avatarUrl = f?.user?.avatarUrl ?? f?.avatarUrl ?? null;
+        return {
+          uniqueId: uid,
+          username: label,
+          displayName: f?.user?.displayName ?? f?.displayName,
+          avatarUrl,
+        };
       })
       .filter(u => !!u.uniqueId && !memberSetUpper.has(u.uniqueId.toUpperCase()));
   }, [friends, memberSetUpper]);
@@ -306,7 +312,7 @@ export default function GroupDetailsScreen() {
           {candidates.map((u, idx) => {
             const uid = u.uniqueId;
             const label = u.displayName || u.username || uid;
-            const avatarUrl = u.avatarUrl ?? u.user?.avatarUrl ?? null;
+            const avatarUrl = u.avatarUrl ?? null;
             const busy = opUid === uid;
 
             return (

@@ -5,6 +5,8 @@ import { Eye, EyeOff } from '@tamagui/lucide-icons';
 import { Input } from '@/shared/ui/Input';
 
 type Props = {
+  id?: string;
+  name?: string;
   label?: string;
   placeholder?: string;
   value?: string;
@@ -16,6 +18,8 @@ type Props = {
 };
 
 export default function PasswordInput({
+  id,
+  name,
   label,
   placeholder = 'Enter your password',
   value,
@@ -43,6 +47,8 @@ export default function PasswordInput({
   return (
     <XStack w="100%">
       <Input
+        id={id}
+        name={name}
         label={label}
         placeholder={placeholder}
         value={value}

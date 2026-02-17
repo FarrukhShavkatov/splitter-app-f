@@ -1,8 +1,10 @@
 import React, { ReactNode } from 'react';
-import { TextInputProps } from 'react-native';
+import { Platform, TextInputProps } from 'react-native';
 import { YStack, XStack, Text, Input as TInput } from 'tamagui';
 
 export type CustomInputProps = {
+  id?: string;
+  name?: string;
   label?: string;
   value?: string;
   onChangeText?: (t: string) => void;
@@ -21,6 +23,8 @@ export type CustomInputProps = {
 };
 
 export function Input({
+  id,
+  name,
   label,
   value,
   onChangeText,
@@ -33,6 +37,14 @@ export function Input({
   rightAdornment,
   textInputProps,
 }: CustomInputProps) {
+  const webIdentityProps: Record<string, string> | undefined =
+    Platform.OS === 'web'
+      ? {
+          ...(id ? { id } : {}),
+          ...(name ? { name } : {}),
+        }
+      : undefined;
+
   return (
     <YStack space="$2" w="100%">
       {!!label && (
@@ -61,6 +73,7 @@ export function Input({
           height="$4"
           fontSize="$4"
           focusStyle={{ borderColor: error ? '$red8' : '$green9' }}
+          {...webIdentityProps}
           {...textInputProps}
         />
 

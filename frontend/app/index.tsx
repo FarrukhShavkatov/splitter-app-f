@@ -1,4 +1,10 @@
 // app/index.tsx - улучшенная Welcome страница
+
+/*
+  заменил старый space на gap
+  убрал index из .map и key, использование index в key — плохая практика при возможных перерендерах
+*/
+
 import React from 'react';
 import { Redirect, Link } from 'expo-router';
 import { YStack, XStack, Text, Circle } from 'tamagui';
@@ -34,7 +40,7 @@ export default function Welcome() {
         
         {/* Language Selector - компактный в правом верхнем углу */}
         <XStack justifyContent="flex-end" marginTop="$3" marginBottom="$6">
-          <XStack space="$1" backgroundColor="$gray3" borderRadius="$8" padding="$1">
+          <XStack gap="$1" backgroundColor="$gray3" borderRadius="$8" padding="$1">
             {languages.map((lang) => (
               <YStack
                 key={lang.code}
@@ -58,10 +64,10 @@ export default function Welcome() {
         </XStack>
 
         {/* Hero Section - более центрированный */}
-        <YStack flex={1} justifyContent="center" alignItems="center" space="$8">
+        <YStack flex={1} justifyContent="center" alignItems="center" gap="$8">
           
           {/* App Icon - круглый с иконкой */}
-          <YStack alignItems="center" space="$5">
+          <YStack alignItems="center" gap="$5">
             <Circle 
               size={120}
               backgroundColor="#2ECC71"
@@ -76,7 +82,7 @@ export default function Welcome() {
               <ScanLine size={48} color="#FFFFFF" />
             </Circle>
             
-            <YStack alignItems="center" space="$3">
+            <YStack alignItems="center" gap="$3">
               <Text fontSize="$9" fontWeight="900" color="$gray12" textAlign="center">
                 {t('app.name', 'Receipt Splitter')}
               </Text>
@@ -87,13 +93,13 @@ export default function Welcome() {
           </YStack>
 
           {/* Feature Highlights - горизонтальные индикаторы */}
-          <XStack space="$6" alignItems="center">
+          <XStack gap="$6" alignItems="center">
             {[
               { icon: '📷', text: t('features.scan', 'Scan') },
               { icon: '➕', text: t('features.split', 'Split') },
               { icon: '💰', text: t('features.calculate', 'Calculate') },
-            ].map((feature, index) => (
-              <YStack key={index} alignItems="center" space="$2" maxWidth={80}>
+            ].map((feature) => (
+              <YStack key={feature.text} alignItems="center" gap="$2" maxWidth={80}>
                 <YStack 
                   width={50} 
                   height={50} 
@@ -113,10 +119,10 @@ export default function Welcome() {
         </YStack>
 
         {/* Call to Action - внизу, четкий фокус */}
-        <YStack space="$5" marginBottom="$8">
+        <YStack gap="$5" marginBottom="$8">
           
           {/* Primary CTA */}
-          <YStack alignItems="center" space="$4">
+          <YStack alignItems="center" gap="$4">
             <Text fontSize="$6" fontWeight="700" textAlign="center" color="$gray12">
               {t('welcome.message', 'Welcome! Let\'s get started')}
             </Text>
@@ -131,8 +137,8 @@ export default function Welcome() {
           </YStack>
 
           {/* Secondary Action - менее навязчиво */}
-          <YStack alignItems="center" space="$3">
-            <XStack alignItems="center" space="$1">
+          <YStack alignItems="center" gap="$3">
+            <XStack alignItems="center" gap="$1">
               <YStack width={60} height={1} backgroundColor="$gray6" />
               <Text fontSize="$3" color="$gray9" paddingHorizontal="$3">
                 {t('welcome.existingUser', 'Already have an account?')}

@@ -5,21 +5,24 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { YStack, XStack, Text } from 'tamagui';
 import { useTranslation } from 'react-i18next';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { Card } from '@/shared/ui/Card';
 import ScreenFormContainer from '@/shared/ui/ScreenFormContainer';
 import PasswordInput from '@/shared/ui/PasswordInput';
-import { login, LoginRequest, getCurrentUser } from '../api';
+import { login, getCurrentUser, ApiError } from '../api';
+import type { LoginRequest } from '../api';
 import { saveToken } from '@/shared/lib/utils/token-storage';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { Mail, Lock } from '@tamagui/lucide-icons';
 
 const schema = z.object({
   email: z.string().email('Please enter a valid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(1, 'Password is required'),
 });
+const INVALID_CREDENTIALS_PATTERN =
+  /(invalid|incorrect|wrong|credentials|password|email|unauthorized|not found|user not found)/i;
 
 type FormData = z.infer<typeof schema>;
 
@@ -32,10 +35,48 @@ export default function LoginForm() {
   const setAuth = useAppStore((s) => s.setAuth);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showNotice = (type: 'success' | 'error', title: string, message: string) => {
+    setNotice({ type, message });
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.alert(`${title}\n\n${message}`);
+      return;
+    }
+    Alert.alert(title, message);
+  };
+
+  const resolveLoginErrorMessage = (error: unknown) => {
+    const fallback = t('auth.loginError', 'An error occurred during login');
+    const invalidCredentialsMessage = t('auth.invalidCredentials', 'Incorrect email or password');
+
+    if (error instanceof ApiError) {
+      if (error.status === 401 || error.code === 'INVALID_CREDENTIALS') {
+        return invalidCredentialsMessage;
+      }
+      if ((error.status === 400 || error.status === 404) && INVALID_CREDENTIALS_PATTERN.test(error.message)) {
+        return invalidCredentialsMessage;
+      }
+      if (INVALID_CREDENTIALS_PATTERN.test(error.message)) {
+        return invalidCredentialsMessage;
+      }
+      return error.message || fallback;
+    }
+
+    if (error instanceof Error) {
+      if (INVALID_CREDENTIALS_PATTERN.test(error.message)) {
+        return invalidCredentialsMessage;
+      }
+      return error.message || fallback;
+    }
+
+    return fallback;
+  };
 
   const onSubmit = async (values: LoginRequest) => {
     try {
       setIsLoading(true);
+      setNotice(null);
       const res = await login(values);
       await saveToken(res.token);
 
@@ -48,21 +89,26 @@ export default function LoginForm() {
 
       setAuth(res.token, profile);
       router.replace('/');
-    } catch (error: any) {
-      Alert.alert(
-        t('common.error', 'Error'),
-        error.message || t('auth.loginError', 'An error occurred during login')
-      );
+    } catch (error: unknown) {
+      showNotice('error', t('common.error', 'Error'), resolveLoginErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
   };
 
+  const onInvalid = () => {
+    const firstMessage =
+      errors.email?.message ||
+      errors.password?.message ||
+      t('auth.loginInvalid', 'Please check the form fields');
+    showNotice('error', t('common.error', 'Error'), firstMessage);
+  };
+
   return (
     <ScreenFormContainer>
-      <YStack space="$6">
+      <YStack gap="$6">
         {/* Header */}
-        <YStack alignItems="center" space="$4">
+        <YStack alignItems="center" gap="$4">
           <Text fontSize="$8" fontWeight="900" color="$gray12">
             {t('auth.signIn', 'Sign In')}
           </Text>
@@ -73,13 +119,13 @@ export default function LoginForm() {
 
         {/* Form Card */}
         <Card>
-          <YStack space="$5">
+          <YStack gap="$5">
             {/* Email */}
             <Controller
               control={control}
               name="email"
               render={({ field: { onChange, value } }) => (
-                <XStack space="$3" alignItems="flex-start">
+                <XStack gap="$3" alignItems="flex-start">
                   <YStack
                     width={40}
                     height={40}
@@ -93,6 +139,8 @@ export default function LoginForm() {
                   </YStack>
                   <YStack flex={1}>
                     <Input
+                      id="login-email"
+                      name="email"
                       label={t('auth.email', 'Email')}
                       placeholder={t('auth.emailPlaceholder', 'Enter your email')}
                       value={value}
@@ -101,6 +149,10 @@ export default function LoginForm() {
                       autoCapitalize="none"
                       error={errors.email?.message}
                       required
+                      textInputProps={{
+                        autoComplete: 'email',
+                        textContentType: 'emailAddress',
+                      }}
                     />
                   </YStack>
                 </XStack>
@@ -112,7 +164,7 @@ export default function LoginForm() {
               control={control}
               name="password"
               render={({ field: { onChange, value } }) => (
-                <XStack space="$3" alignItems="flex-start">
+                <XStack gap="$3" alignItems="flex-start">
                   <YStack
                     width={40}
                     height={40}
@@ -126,12 +178,18 @@ export default function LoginForm() {
                   </YStack>
                   <YStack flex={1}>
                     <PasswordInput
+                      id="login-password"
+                      name="password"
                       label={t('auth.password', 'Password')}
                       placeholder={t('auth.passwordPlaceholder', 'Enter your password')}
                       value={value}
                       onChangeText={onChange}
                       error={errors.password?.message}
                       required
+                      textInputProps={{
+                        autoComplete: 'current-password',
+                        textContentType: 'password',
+                      }}
                     />
                   </YStack>
                 </XStack>
@@ -150,15 +208,20 @@ export default function LoginForm() {
               title={isLoading ? t('common.loading', 'Loading...') : t('auth.signIn', 'Sign In')}
               variant="primary"
               size="large"
-              onPress={handleSubmit(onSubmit)}
+              onPress={handleSubmit(onSubmit, onInvalid)}
               disabled={isLoading}
             />
+            {notice && (
+              <Text fontSize="$3" color={notice.type === 'error' ? '$red10' : '$green10'}>
+                {notice.message}
+              </Text>
+            )}
           </YStack>
         </Card>
 
         {/* Footer */}
-        <YStack alignItems="center" space="$3">
-          <XStack alignItems="center" space="$1">
+        <YStack alignItems="center" gap="$3">
+          <XStack alignItems="center" gap="$1">
             <YStack width={80} height={1} backgroundColor="$gray6" />
             <Text fontSize="$3" color="$gray9" paddingHorizontal="$3">
               {t('auth.noAccount', "Don't have an account?")}

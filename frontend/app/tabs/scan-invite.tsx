@@ -1,4 +1,4 @@
-// app/tabs/scan-invite.tsx
+﻿// app/tabs/scan-invite.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View, Image, Animated, Modal } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
@@ -29,7 +29,6 @@ export default function ScanInviteScreen() {
   const router = useRouter();
   const { from } = useLocalSearchParams<{ from?: FromParam }>();
 
-  // Анимации для модалки
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
@@ -43,7 +42,6 @@ export default function ScanInviteScreen() {
 
   useEffect(() => {
     if (status === 'ok') {
-      // Запускаем анимацию появления
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -76,26 +74,43 @@ export default function ScanInviteScreen() {
 
       setStatus('loading');
       
-      let response;
-      if (parsed.kind === 'friend') {
-        response = await FriendsApi.joinByToken(parsed.token);
-      } else {
-        response = await GroupsApi.joinByToken(parsed.token);
-      }
+      const response =
+        parsed.kind === 'friend'
+          ? await FriendsApi.joinByToken(parsed.token)
+          : await GroupsApi.joinByToken(parsed.token);
 
-      // Извлекаем данные пользователя из ответа API
-      // Адаптируйте под структуру вашего API
-      if (response?.data) {
-        setUserData({
-          avatar: response.data.avatar || response.data.photo,
-          name: response.data.name || response.data.fullName,
-          username: response.data.username || `@${response.data.login}`,
-          bio: response.data.bio || `${response.data.name} endi sizning do'stingiz!`
-        });
-      }
+      // API helpers already return response.data (not axios response object).
+      const payload = (response ?? {}) as Record<string, any>;
+      const userLike =
+        payload.user ??
+        payload.inviter ??
+        payload.owner ??
+        payload.from ??
+        payload.to ??
+        null;
+
+      const fallbackName =
+        parsed.kind === 'group' ? 'Group invite accepted' : 'Friend invite accepted';
+      const fallbackUsername = parsed.kind === 'group' ? '@group' : '@friend';
+      const actionText =
+        parsed.kind === 'group'
+          ? payload.member ?? payload.joined ?? 'joined'
+          : payload.action ?? 'accepted';
+
+      setUserData({
+        avatar: userLike?.avatarUrl ?? userLike?.avatar ?? userLike?.photo,
+        name: userLike?.name ?? userLike?.fullName ?? userLike?.username ?? fallbackName,
+        username:
+          userLike?.uniqueId
+            ? `@${String(userLike.uniqueId).toLowerCase()}`
+            : userLike?.username
+            ? `@${String(userLike.username).toLowerCase()}`
+            : fallbackUsername,
+        bio: `Status: ${String(actionText)}`,
+      });
 
       setStatus('ok');
-      setTimeout(goBack, 3000); // 3 секунды показываем успех
+      setTimeout(goBack, 3000);
     } catch {
       setStatus('error');
       setTimeout(() => {
@@ -107,7 +122,6 @@ export default function ScanInviteScreen() {
 
   return (
     <View style={S.root}>
-      {/* Header (светлый текст поверх камеры) */}
       <View style={S.headerAbs}>
         <XStack ai="center" jc="space-between" px="$3" py="$2">
           <Button
@@ -125,7 +139,6 @@ export default function ScanInviteScreen() {
         </XStack>
       </View>
 
-      {/* Камера только на фокусе */}
       <View style={S.cameraWrap}>
         {isFocused && perm?.granted ? (
           <CameraView
@@ -144,20 +157,18 @@ export default function ScanInviteScreen() {
         )}
       </View>
 
-      {/* Loading статус */}
       {status === 'loading' && (
         <View style={S.overlay}>
           <YStack ai="center" gap="$2">
             <ActivityIndicator color="white" />
-            <Paragraph col="white">Connecting…</Paragraph>
+            <Paragraph col="white">ConnectingвЂ¦</Paragraph>
           </YStack>
         </View>
       )}
 
-      {/* Error статус */}
       {status === 'error' && (
         <View style={S.overlay}>
-          <Paragraph col="white">Error 😕</Paragraph>
+          <Paragraph col="white">Error рџ•</Paragraph>
         </View>
       )}
 
@@ -178,12 +189,10 @@ export default function ScanInviteScreen() {
               },
             ]}
           >
-            {/* Галочка успеха */}
             <View style={S.checkmark}>
-              <Paragraph fos={24} fow="bold" col="white">✓</Paragraph>
+              <Paragraph fos={24} fow="bold" col="white">вњ“</Paragraph>
             </View>
 
-            {/* Аватар */}
             <View style={S.avatarContainer}>
               {userData?.avatar ? (
                 <Image
@@ -200,7 +209,6 @@ export default function ScanInviteScreen() {
               )}
             </View>
 
-            {/* Информация о пользователе */}
             <YStack ai="center" px="$4" pt="$2" gap="$1">
               <Paragraph fos={20} fow="700" col="#1a1a1a" ta="center">
                 {userData?.name || 'User'}
@@ -210,7 +218,6 @@ export default function ScanInviteScreen() {
               </Paragraph>
             </YStack>
 
-            {/* Био */}
             {userData?.bio && (
               <YStack px="$6" pt="$4">
                 <Paragraph fos={14} col="#333" ta="center" lh={20}>
@@ -270,7 +277,6 @@ const S = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#2ECC71',
-    // Для Android/iOS тени используем elevation + shadowColor
     elevation: 10,
     shadowColor: '#2ECC71',
     shadowOffset: { width: 0, height: 10 },
@@ -289,7 +295,6 @@ const S = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
-    // Тень для галочки
     elevation: 5,
     shadowColor: '#2ECC71',
     shadowOffset: { width: 0, height: 4 },

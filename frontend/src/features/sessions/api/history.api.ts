@@ -2,7 +2,7 @@ import { apiClient } from '@/features/auth/api';
 
 /** Totals: по товарам */
 export type SessionHistoryTotalsByItem = {
-  kind: 'item';
+  kind?: string;
   name: string;
   total: number;
   itemId: string;
@@ -35,6 +35,7 @@ export type SessionHistoryItem = {
 export type SessionHistoryPayload = {
   status: 'finalized' | 'draft' | string;
   totals: {
+    currency?: string;
     byItem: SessionHistoryTotalsByItem[];
     grandTotal: number;
     byParticipant: SessionHistoryTotalsByParticipant[];
@@ -52,6 +53,7 @@ export interface SessionHistoryEntryRaw {
   sessionName: string;
   finalizedAt: string;
   grandTotal: number;
+  currency?: string;
   participantUniqueIds: string[];
   isCreator: boolean;
   payload: SessionHistoryPayload;
@@ -71,6 +73,7 @@ export interface SessionHistoryEntry {
   finalizedAt?: string;
   createdAt?: string;
   grandTotal: number;
+  currency?: string;
 
   participantUniqueIds: string[];
 

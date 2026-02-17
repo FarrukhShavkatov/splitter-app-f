@@ -118,8 +118,9 @@ export default function GroupCreateScreen() {
       const uid = pickUniqueId(friend);
       const label = pickTitle(friend);
       const subtitle = pickSubtitle(friend);
+      const avatarUrl = friend?.user?.avatarUrl ?? friend?.avatarUrl ?? null;
       const role = uid ? memberRole.get(uid.toUpperCase()) : undefined;
-      return { uid, label, subtitle, role };
+      return { uid, label, subtitle, role, avatarUrl };
     });
     if (!filter) return list;
     const q = filter.toLowerCase();
@@ -187,6 +188,7 @@ export default function GroupCreateScreen() {
 
       <XStack gap="$2" ai="center">
         <Input
+          id="group-create-name"
           f={1}
           value={name}
           onChangeText={setName}
@@ -214,6 +216,7 @@ export default function GroupCreateScreen() {
             {t('groups.create.manageMembers', 'Add or remove members')}
           </Paragraph>
           <Input
+            id="group-member-search"
             value={filter}
             onChangeText={setFilter}
             placeholder={t('groups.create.searchPlaceholder', 'Search friends…')}
