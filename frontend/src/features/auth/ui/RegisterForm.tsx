@@ -253,7 +253,21 @@ export default function RegisterForm() {
               title={isLoading ? t('common.loading', 'Loading...') : t('auth.createAccount', 'Create Account')}
               variant="primary"
               size="large"
-              onPress={handleSubmit(onSubmit, onInvalid)}
+              onPress={() => {
+                if (Platform.OS === 'web') window.alert('DEBUG: Button pressed');
+                handleSubmit(
+                  (values) => {
+                    if (Platform.OS === 'web') window.alert('DEBUG: Validation OK - ' + JSON.stringify(values));
+                    return onSubmit(values);
+                  },
+                  (validationErrors) => {
+                    if (Platform.OS === 'web') window.alert('DEBUG: Validation FAILED - ' + JSON.stringify(validationErrors));
+                    onInvalid();
+                  },
+                )().catch((err) => {
+                  if (Platform.OS === 'web') window.alert('DEBUG: handleSubmit THREW - ' + String(err));
+                });
+              }}
               disabled={isLoading}
             />
             {notice && (
