@@ -118,15 +118,19 @@ export default function SessionsHistoryScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
 
+  // FIX: ранее зависимости включали [initialized, loading, currentLimit, fetchHistory, refreshIfStale].
+  // каждый вызов fetchHistory менял loading (false→true→false) и currentLimit,
+  // и заново запускало useEffect → refreshIfStale → fetchHistory → до бесконечности
+  // теперь зависимость только от "initialized": загрузка происходит один раз при входе на экран,
+  // а обновление — только если данные протухли (>15 сек)
   useEffect(() => {
-    if (loading) return;
-    if (!initialized || (currentLimit ?? 0) < HISTORY_LIMIT) {
+    if (!initialized) {
       fetchHistory(HISTORY_LIMIT).catch(() => {});
     } else {
-      // если уже инициализировано — подёргаем обновление по давности
       refreshIfStale(15_000, HISTORY_LIMIT).catch(() => {});
     }
-  }, [initialized, loading, currentLimit, fetchHistory, refreshIfStale]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialized]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

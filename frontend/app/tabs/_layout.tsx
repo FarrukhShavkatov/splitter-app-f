@@ -1,14 +1,12 @@
 // app/tabs/_layout.tsx
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { YStack, XStack, Text, View } from 'tamagui';
 import { Home, Settings, Bell, ChevronLeft } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
-import { AppState } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import UserAvatar from '@/shared/ui/UserAvatar';
@@ -34,11 +32,17 @@ function DotBadge({ value }: { value?: number }) {
 }
 
 // --- Global Header for all Tabs ---
+// FIX: ранее здесь были useEffect + useFocusEffect + AppState.addEventListener,
+// которые вызывали fetchAll() (загрузку списка друзей и запросов) при каждом
+// переключении таба. Поскольку этот хедер общий для ВСЕХ экранов, каждая
+// навигация → fetchAll → обновление стора → перерисовка → useFocusEffect →
+// снова fetchAll → бесконечный цикл запросов GET /friends и GET /friends/requests
+// теперь хедер только ЧИТАЕТ requestsCount из стора через selector.
+// загрузку данных выполняют сами экраны друзей при своём монтировании
 function GlobalTabsHeader(props: any) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAppStore();
-  const fetchAll = useFriendsStore((s) => s.fetchAll);
   const { t } = useTranslation();
   const routeName = props?.route?.name ?? '';
   const showHomeShortcut =
@@ -47,23 +51,6 @@ function GlobalTabsHeader(props: any) {
     routeName.startsWith('groups') ||
     routeName.startsWith('sessions');
   const onBackToHome = () => router.replace({ pathname: '/tabs' });
-
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchAll();
-    }, [fetchAll])
-  );
-
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') fetchAll();
-    });
-    return () => sub.remove();
-  }, [fetchAll]);
 
   const requestsCount = useFriendsStore((s) => s.requestsRaw?.incoming?.length ?? 0);
   const displayName = user?.username || t('profile.labels.guest', 'Guest');

@@ -129,19 +129,18 @@ export const useSessionsHistoryStore = create<State & Actions>((set, get) => ({
   async refreshIfStale(maxAgeMs = 15_000, limit, all = false) {
     const { lastFetchedAt, initialized } = get();
 
-    // если ни разу не грузили — грузим
     if (!initialized || !lastFetchedAt) {
       await get().fetchHistory(limit, all);
       return;
     }
 
-    // если данных нет — грузим
-    if (get().sessions.length === 0) {
-      await get().fetchHistory(limit, all);
-      return;
-    }
+    // FIX: ранее здесь была проверка if (sessions.length === 0) { fetchHistory() }
+    // которая вызывала бесконечный цикл: когда у пользователя нет истории чеков,
+    // API возвращал пустой массив → sessions.length === 0 → повторный запрос →
+    // снова пустой ответ → снова запрос → до бесконечности
+    // пустая история — это валидный ответ API, перезагружать его не нужно
+    // обновляем данные только если они "протухли" по времени
 
-    // если «протухли» — грузим
     const age = Date.now() - lastFetchedAt;
     if (age > maxAgeMs) {
       await get().fetchHistory(limit, all);
