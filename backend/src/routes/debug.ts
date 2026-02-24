@@ -1,16 +1,22 @@
 import { Router } from "express";
+import type { Request, Response, NextFunction } from "express";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = Router();
 
-/**
- * Simple Gemini probe endpoint.
- * Returns:
- *  - keyPresent: whether GEMINI_API_KEY env var is set
- *  - keyFormatValid: heuristic check (starts with AIza)
- *  - testModel: first model we tried
- *  - attempt: HTTP status / error body from a minimal generateContent call (no image)
- */
-router.get("/gemini", async (req, res) => {
+// FIX: debug-эндпоинты были доступны всем без авторизации, включая production.
+// 1) Добавлен middleware, который в production возвращает 404 — эндпоинты полностью скрыты.
+// 2) Добавлен authenticateToken — даже в dev-режиме нужен валидный JWT.
+// Причина: /debug/gemini раскрывал наличие и формат GEMINI_API_KEY,
+// а также позволял кому угодно делать запросы к Google AI за счёт сервера.
+router.use((req: Request, res: Response, next: NextFunction) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(404).json({ error: "Not found" });
+  }
+  next();
+});
+
+router.get("/gemini", authenticateToken, async (req: Request, res: Response) => {
   const key = process.env.GEMINI_API_KEY;
   const testModel = (
     process.env.GEMINI_MODEL_PARSE || "gemini-1.5-flash"

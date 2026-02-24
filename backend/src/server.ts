@@ -17,6 +17,14 @@ import debugRoutes from "./routes/debug.js";
 // Load .env
 dotenv.config();
 
+// FIX: без этой проверки сервер стартовал с пустым JWT_SECRET (или слишком коротким)
+// что позволяло подписывать/верифицировать JWT пустой строкой — фактически без защиты
+// Теперь сервер не запустится, пока секрет не будет задан корректно.
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 16) {
+  console.error("FATAL: JWT_SECRET must be set and at least 16 characters");
+  process.exit(1);
+}
+
 const app = express();
 // Allow configurable JSON body size (large base64 images for /sessions/scan)
 // Default increased from Express ~100kb to 4mb to fit ~3MB binary image (base64 expands ~33%).
@@ -110,9 +118,13 @@ app.listen(PORT, () => {
   );
 });
 
-console.log("DEBUG ENV:", {
-  PORT: process.env.PORT,
-  DATABASE_URL: process.env.DATABASE_URL ? "OK" : "MISSING",
-  JWT_SECRET: process.env.JWT_SECRET ? "OK" : "MISSING",
-  JSON_BODY_LIMIT: JSON_LIMIT,
-});
+// FIX: раньше блок "DEBUG ENV" выполнялся всегда, включая production
+// Перенесён под проверку NODE_ENV, чтобы не светить переменные окружения в prod-логах
+if (process.env.NODE_ENV !== "production") {
+  console.log("ENV check:", {
+    PORT: process.env.PORT,
+    DATABASE_URL: process.env.DATABASE_URL ? "OK" : "MISSING",
+    JWT_SECRET: process.env.JWT_SECRET ? "OK" : "MISSING",
+    JSON_BODY_LIMIT: JSON_LIMIT,
+  });
+}

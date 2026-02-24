@@ -14,18 +14,21 @@ const router = Router();
  *   description: Friends and friend request management
  */
 
-/** Helper to select public fields */
+// FIX: убран email из публичного select — список друзей, запросы дружбы и поиск
+// раскрывали email-адреса пользователей всем авторизованным юзерам.
 const userPublicSelect = {
   id: true,
-  email: true,
   username: true,
   uniqueId: true,
   avatarUrl: true,
 } as const;
 
-/** Helper: choose secret for friend invites */
+// FIX: аналогично groups — invite-токены друзей должны подписываться отдельным ключом.
 function getFriendInviteSecret() {
-  return process.env.FRIEND_INVITE_SECRET || process.env.JWT_SECRET || "";
+  const secret = process.env.FRIEND_INVITE_SECRET;
+  if (secret) return secret;
+  console.warn("FRIEND_INVITE_SECRET not set; falling back to JWT_SECRET. Set a separate secret in production.");
+  return process.env.JWT_SECRET || "";
 }
 
 /**

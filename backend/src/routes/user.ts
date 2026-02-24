@@ -429,17 +429,17 @@ router.get(
   authenticateToken,
   async (_req: AuthRequest, res: Response) => {
     try {
+      // FIX: убран email из select — эндпоинт /user/list раскрывал email-адреса
+      // всех зарегистрированных пользователей любому авторизованному юзеру.
       const users = await prisma.user.findMany({
         select: {
           id: true,
-          email: true,
           username: true,
           uniqueId: true,
           avatarUrl: true,
         },
         orderBy: { id: "asc" },
       });
-      console.log("/user/list count:", users.length);
       return res.json(users);
     } catch (err) {
       console.error("/user/list error:", err);

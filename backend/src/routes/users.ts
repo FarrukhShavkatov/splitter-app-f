@@ -40,8 +40,6 @@ const router = Router();
  *               properties:
  *                 id:
  *                   type: integer
- *                 email:
- *                   type: string
  *                 username:
  *                   type: string
  *                 uniqueId:
@@ -49,45 +47,53 @@ const router = Router();
  *                 avatarUrl:
  *                   type: string
  *                   nullable: true
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: User not found
  */
-router.get("/:id", async (req, res: Response) => {
-  try {
-    const id = Number(req.params.id);
-    if (!Number.isFinite(id))
-      return res.status(400).json({ error: "Invalid id" });
+// FIX: GET /users/:id был полностью открыт (без авторизации) и возвращал email.
+// 1) Добавлен authenticateToken — профиль доступен только авторизованным.
+// 2) Убран email из select и из ответа — нет причин раскрывать чужие адреса.
+router.get(
+  "/:id",
+  authenticateToken,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const id = Number(req.params.id);
+      if (!Number.isFinite(id))
+        return res.status(400).json({ error: "Invalid id" });
 
-    const user = await prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        uniqueId: true,
-        avatarUrl: true,
-      },
-    });
-    if (!user) return res.status(404).json({ error: "User not found" });
+      const user = await prisma.user.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          username: true,
+          uniqueId: true,
+          avatarUrl: true,
+        },
+      });
+      if (!user) return res.status(404).json({ error: "User not found" });
 
-    const rawParam = String(req.query.raw ?? "").toLowerCase();
-    const isRaw = rawParam === "true" || rawParam === "1";
-    const avatarUrl = isRaw
-      ? user.avatarUrl ?? null
-      : user.avatarUrl ?? getDefaultAvatarUrl();
+      const rawParam = String(req.query.raw ?? "").toLowerCase();
+      const isRaw = rawParam === "true" || rawParam === "1";
+      const avatarUrl = isRaw
+        ? user.avatarUrl ?? null
+        : user.avatarUrl ?? getDefaultAvatarUrl();
 
-    return res.json({
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      uniqueId: user.uniqueId,
-      avatarUrl,
-    });
-  } catch (err) {
-    console.error("GET /users/:id error:", err);
-    return res.status(500).json({ error: "Server error" });
+      return res.json({
+        id: user.id,
+        username: user.username,
+        uniqueId: user.uniqueId,
+        avatarUrl,
+      });
+    } catch (err) {
+      console.error("GET /users/:id error:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
   }
-});
+);
 
 /**
  * @swagger

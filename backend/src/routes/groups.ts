@@ -178,6 +178,59 @@ router.get("/", authenticateToken, async (req: AuthRequest, res: Response) => {
 
 /**
  * @swagger
+ * /groups/lookup:
+ *   get:
+ *     summary: Find a group's ID by name (current user's groups)
+ *     tags: [Groups]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Group name to lookup (case-insensitive)
+ *     responses:
+ *       200:
+ *         description: Group found
+ *       404:
+ *         description: Group not found
+ */
+// FIX: /lookup ПЕРЕМЕЩЁН ПЕРЕД /:groupId.
+// Раньше /lookup был объявлен ниже /:groupId, и Express сопоставлял "lookup"
+// как параметр :groupId (NaN). Результат: Number("lookup") → NaN → "Invalid groupId".
+// Эндпоинт /groups/lookup был фактически недоступен.
+router.get(
+  "/lookup",
+  authenticateToken,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const name = String(req.query.name || "").trim();
+      if (!name) return res.status(400).json({ error: "name is required" });
+
+      const me = req.user.id;
+      const group = await prisma.group.findFirst({
+        where: {
+          name: { equals: name, mode: "insensitive" },
+          OR: [{ ownerId: me }, { members: { some: { userId: me } } }],
+        },
+        select: { id: true, name: true },
+        orderBy: { id: "asc" },
+      });
+
+      if (!group) return res.status(404).json({ error: "Group not found" });
+      return res.json(group);
+    } catch (err) {
+      console.error("GET /groups/lookup error:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+/**
+ * @swagger
  * /groups/{groupId}:
  *   get:
  *     summary: Get group participants (owner included as member with role=owner)
@@ -295,58 +348,15 @@ router.get(
   }
 );
 
-/**
- * @swagger
- * /groups/lookup:
- *   get:
- *     summary: Find a group's ID by name (current user's groups)
- *     tags: [Groups]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: name
- *         schema:
- *           type: string
- *         required: true
- *         description: Group name to lookup (case-insensitive)
- *     responses:
- *       200:
- *         description: Group found
- *       404:
- *         description: Group not found
- */
-router.get(
-  "/lookup",
-  authenticateToken,
-  async (req: AuthRequest, res: Response) => {
-    try {
-      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-      const name = String(req.query.name || "").trim();
-      if (!name) return res.status(400).json({ error: "name is required" });
-
-      const me = req.user.id;
-      const group = await prisma.group.findFirst({
-        where: {
-          name: { equals: name, mode: "insensitive" },
-          OR: [{ ownerId: me }, { members: { some: { userId: me } } }],
-        },
-        select: { id: true, name: true },
-        orderBy: { id: "asc" },
-      });
-
-      if (!group) return res.status(404).json({ error: "Group not found" });
-      return res.json(group);
-    } catch (err) {
-      console.error("GET /groups/lookup error:", err);
-      return res.status(500).json({ error: "Server error" });
-    }
-  }
-);
-
-/** Helper: choose secret for group invites */
+// FIX: раньше invite-токены подписывались тем же JWT_SECRET, что и auth-токены.
+// Это опасно: если invite-токен утечёт (ссылка в чате), злоумышленник может попытаться
+// использовать его как auth-токен (payload разный, но ключ тот же — потенциальный confusion attack).
+// Теперь есть отдельная переменная GROUP_INVITE_SECRET; JWT_SECRET — только fallback с предупреждением.
 function getInviteSecret() {
-  return process.env.GROUP_INVITE_SECRET || process.env.JWT_SECRET || "";
+  const secret = process.env.GROUP_INVITE_SECRET;
+  if (secret) return secret;
+  console.warn("GROUP_INVITE_SECRET not set; falling back to JWT_SECRET. Set a separate secret in production.");
+  return process.env.JWT_SECRET || "";
 }
 
 /**

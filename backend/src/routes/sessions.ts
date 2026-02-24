@@ -185,17 +185,22 @@ router.post("/", authenticateToken, async (req: AuthRequest, res: Response) => {
     const serviceFee = Number(req.body?.serviceFee ?? 0);
     const total = Number(req.body?.total ?? 0);
 
-    let groupCheck = null as null | { ownerId: number };
+    // FIX: раньше при создании сессии с groupId проверялось только существование группы,
+    // но не членство текущего пользователя. Любой авторизованный юзер мог создавать
+    // сессии в чужих группах, зная groupId. Теперь — проверка owner || member.
     if (groupId != null) {
       const gid = Number(groupId);
       if (!Number.isFinite(gid))
         return res.status(400).json({ error: "Invalid groupId" });
-      groupCheck = await prisma.group.findUnique({
+      const group = await prisma.group.findUnique({
         where: { id: gid },
-        select: { ownerId: true },
+        select: { ownerId: true, members: { where: { userId: req.user.id }, select: { userId: true } } },
       });
-      if (!groupCheck)
+      if (!group)
         return res.status(404).json({ error: "Group not found" });
+      const isMember = group.ownerId === req.user.id || group.members.length > 0;
+      if (!isMember)
+        return res.status(403).json({ error: "You are not a member of this group" });
     }
 
     const created = await prisma.session.create({
@@ -240,6 +245,19 @@ router.get("/", authenticateToken, async (req: AuthRequest, res: Response) => {
     if (!req.user) return res.status(401).json({ error: "Unauthorized" });
     const groupId =
       req.query.groupId != null ? Number(req.query.groupId) : undefined;
+
+    // FIX: аналогично POST — при GET /sessions?groupId=X любой авторизованный юзер
+    // мог получить список сессий чужой группы. Теперь требуется членство.
+    if (groupId && Number.isFinite(groupId)) {
+      const group = await prisma.group.findUnique({
+        where: { id: groupId },
+        select: { ownerId: true, members: { where: { userId: req.user.id }, select: { userId: true } } },
+      });
+      if (!group) return res.status(404).json({ error: "Group not found" });
+      const isMember = group.ownerId === req.user.id || group.members.length > 0;
+      if (!isMember) return res.status(403).json({ error: "You are not a member of this group" });
+    }
+
     const where =
       groupId && Number.isFinite(groupId)
         ? { groupId }

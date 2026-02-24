@@ -1,4 +1,5 @@
 import { Router } from "express";
+import crypto from "crypto"; // FIX: заменил Math.random() на crypto для генерации uniqueId
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { prisma } from "../config/prisma.js";
@@ -10,9 +11,11 @@ import {
 
 const router = Router();
 
+// FIX: Было "#" + Math.floor(1000 + Math.random() * 9000) → всего 9000 вариантов.
+// При ~1000 пользователях вероятность коллизии около 5% (задача о днях рождения).
+// Теперь 8-символьный hex (4 байта) = 4 294 967 296 вариантов + crypto вместо Math.random().
 function generateUniqueId() {
-  // Format: #1234 (4-digit code). Removed 'USER' prefix per requirement.
-  return "#" + Math.floor(1000 + Math.random() * 9000);
+  return "#" + crypto.randomBytes(4).toString("hex").toUpperCase();
 }
 
 /**
@@ -64,10 +67,11 @@ function generateUniqueId() {
  *       415:
  *         description: Неверный Content-Type (нужен application/json)
  */
+// FIX: убраны console.log, которые логировали req.body целиком (включая пароль в открытом виде),
+// а также content-type, типы полей и сгенерированный uniqueId.
+// В production это записывалось в stdout/логи, что является утечкой секретов.
 router.post("/register", async (req, res) => {
   const ct = String(req.headers["content-type"] || "");
-  console.log("/auth/register content-type:", ct);
-  console.log("/auth/register body:", req.body);
   try {
     if (!ct.includes("application/json")) {
       return res
@@ -76,12 +80,6 @@ router.post("/register", async (req, res) => {
     }
 
     const { email, password, username } = req.body ?? {};
-    console.log("/auth/register types:", {
-      email: typeof email,
-      password: typeof password,
-      username: typeof username,
-    });
-
     // Soft type coercion: numbers → strings, arrays/objects are not allowed
     const emailVal =
       typeof email === "string"
@@ -139,34 +137,41 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(cleanPassword, 10);
 
-    // Generate uniqueId with multiple attempts to avoid collisions
-    let uniqueId = "";
-    for (let i = 0; i < 5; i++) {
-      uniqueId = generateUniqueId();
-      const exists = await prisma.user.findUnique({ where: { uniqueId } });
-      if (!exists) break;
-      if (i === 4) {
-        return res.status(500).json({ error: "Failed to generate unique ID" });
+    // FIX: Раньше uniqueId генерировался отдельно, потом findUnique проверка,
+    // потом create. Между check и insert был race condition (TOCTOU):
+    // два параллельных запроса могли пройти проверку одновременно.
+    // P2002 на email обрабатывался, но P2002 на uniqueId — нет (возвращало "Email already in use").
+    // Теперь: atomic create в цикле, P2002.meta.target различает email и uniqueId коллизии.
+    let user;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const uniqueId = generateUniqueId();
+      try {
+        user = await prisma.user.create({
+          data: {
+            email: cleanEmail,
+            password: hashedPassword,
+            username: cleanUsername,
+            uniqueId,
+          },
+        });
+        break;
+      } catch (e: any) {
+        if (e?.code === "P2002") {
+          const target: string[] = e.meta?.target ?? [];
+          if (target.includes("email")) {
+            return res.status(409).json({ error: "Email already in use" });
+          }
+          // uniqueId collision — retry with a new one
+          if (attempt === 9) {
+            return res.status(500).json({ error: "Failed to generate unique ID" });
+          }
+          continue;
+        }
+        throw e;
       }
     }
-    console.log("/auth/register generated uniqueId:", uniqueId);
-
-    let user;
-    try {
-      user = await prisma.user.create({
-        data: {
-          email: cleanEmail,
-          password: hashedPassword,
-          username: cleanUsername,
-          uniqueId,
-        },
-      });
-    } catch (e: any) {
-      if (e?.code === "P2002") {
-        // unique constraint conflict
-        return res.status(409).json({ error: "Email already in use" });
-      }
-      throw e;
+    if (!user) {
+      return res.status(500).json({ error: "Failed to generate unique ID" });
     }
 
     const token = jwt.sign(
@@ -175,7 +180,6 @@ router.post("/register", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    console.log("/auth/register success:", { id: user.id });
     res.json({
       token,
       user: {
@@ -254,8 +258,8 @@ router.post("/register", async (req, res) => {
  *       415:
  *         description: Неверный Content-Type (нужен application/json)
  */
+// FIX: убран console.log("/auth/login body:", req.body) — логировал пароль в открытом виде.
 router.post("/login", async (req, res) => {
-  console.log("/auth/login body:", req.body);
   try {
     const ct = String(req.headers["content-type"] || "");
     if (!ct.includes("application/json")) {
@@ -305,7 +309,6 @@ router.post("/login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    console.log("/auth/login success:", { id: user.id });
     res.json({
       token,
       user: {
