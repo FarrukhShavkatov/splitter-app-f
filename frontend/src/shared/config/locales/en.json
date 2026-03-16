@@ -50,11 +50,43 @@
     "requests": "Requests",
     "add": "Add Friend",
     "empty": "No friends yet. Tap + to add.",
-    "searchPlaceholder": "Enter uniqueId, e.g. USER#1234",
+    "searchPlaceholder": "Enter User ID or Username",
     "send": "Send request",
     "remove": "Remove",
     "loading": "Loading...",
-    "error": "Failed to load"
+    "error": "Failed to load",
+    "common": {
+      "unknownUser": "Unknown user",
+      "error": "Something went wrong"
+    },
+    "status": {
+      "add": "Add",
+      "you": "You",
+      "friend": "Friend",
+      "requested": "Requested",
+      "incoming": "Incoming"
+    },
+    "search": {
+      "placeholder": "Enter User ID or Username",
+      "hint": "Search by User ID or Username to find someone",
+      "button": "Search",
+      "noResults": "No results found",
+      "notFound": "User not found",
+      "error": "Search failed",
+      "inviteSent": "Invite sent to {{target}}",
+      "inviteFailed": "Could not send invite"
+    },
+    "requestsScreen": {
+      "accepted": "{{target}} was added to friends",
+      "rejected": "Request from {{target}} was rejected",
+      "tabOutgoing": "Outgoing",
+      "tabIncoming": "Incoming",
+      "scanInvite": "Scan invite",
+      "showMyQr": "Show my QR",
+      "emptyIncoming": "No incoming requests",
+      "emptyOutgoing": "No outgoing requests",
+      "requestedLabel": "Requested"
+    }
   },
   "home": {
     "header": {
@@ -179,6 +211,15 @@
     "finish": "Finish",
     "history": "Recent bills",
     "historyDetails": "Bill details"
+  },
+  "history": {
+    "title": "Recent bills",
+    "subtitle": "Home",
+    "loading": "Loading...",
+    "empty": "No history yet",
+    "participants": "{{count}} participants",
+    "participants_one": "{{count}} participant",
+    "fallbackName": "Bill"
   },
   "settings": {
     "language": {

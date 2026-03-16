@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import {
   YStack,
   XStack,
@@ -84,6 +84,9 @@ function IconPill({
 
 type UserLite = { uniqueId?: string; username?: string; displayName?: string; id?: number };
 
+const MIN_SEARCH_QUERY_LENGTH = 2;
+const SEARCH_DEBOUNCE_MS = 300;
+
 interface UserRowProps {
   title: string;
   uid?: string;
@@ -147,8 +150,14 @@ export default function FriendsRequestsUnified() {
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<UserLite[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [searching, setSearching] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const searchRequestIdRef = useRef(0);
+  const searchRef = useRef(search);
+  const tRef = useRef(t);
+  const noticeOkRef = useRef(notice.ok);
+  const noticeErrRef = useRef(notice.err);
 
   const [busyId, setBusyId] = useState<number | null>(null);
   const [tab, setTab] = useState<'outgoing' | 'incoming'>('incoming');
@@ -156,6 +165,19 @@ export default function FriendsRequestsUnified() {
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
+
+  useEffect(() => {
+    searchRef.current = search;
+  }, [search]);
+
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
+
+  useEffect(() => {
+    noticeOkRef.current = notice.ok;
+    noticeErrRef.current = notice.err;
+  }, [notice]);
 
   const incoming = useMemo(() => requestsRaw?.incoming ?? [], [requestsRaw]);
   const outgoing = useMemo(() => requestsRaw?.outgoing ?? [], [requestsRaw]);
@@ -221,7 +243,7 @@ export default function FriendsRequestsUnified() {
     return wrap(
       () => FriendsApi.accept(meUniqueId!, fromId),
       fromId,
-      t('friends.requests.accepted', { target })
+      t('friends.requestsScreen.accepted', { target })
     );
   };
 
@@ -230,26 +252,56 @@ export default function FriendsRequestsUnified() {
     return wrap(
       () => FriendsApi.reject(meUniqueId!, fromId),
       fromId,
-      t('friends.requests.rejected', { target })
+      t('friends.requestsScreen.rejected', { target })
     );
   };
 
-  async function doSearch() {
-    if (!query.trim()) return;
+  const runSearch = useCallback(async (value: string, notifyOnEmpty = false) => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.length < MIN_SEARCH_QUERY_LENGTH) {
+      searchRequestIdRef.current += 1;
+      setResults([]);
+      setHasSearched(false);
+      setSearching(false);
+      return;
+    }
+
+    const requestId = ++searchRequestIdRef.current;
     setSearching(true);
     try {
-      const response = await search(query.trim());
+      const response = await searchRef.current(trimmed);
+      if (requestId !== searchRequestIdRef.current) return;
       setResults(response || []);
-      if (!response || response.length === 0) {
-        notice.ok(t('friends.search.noResults', 'No results found'));
-      }
     } catch (error: any) {
-      notice.err(error?.message ?? t('friends.search.error', 'Search failed'));
+      if (requestId !== searchRequestIdRef.current) return;
+      noticeErrRef.current(
+        error?.message ?? tRef.current('friends.search.error', 'Search failed')
+      );
       setResults([]);
     } finally {
-      setSearching(false);
+      if (requestId === searchRequestIdRef.current) {
+        setHasSearched(true);
+        setSearching(false);
+      }
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed || trimmed.length < MIN_SEARCH_QUERY_LENGTH) {
+      searchRequestIdRef.current += 1;
+      setResults([]);
+      setHasSearched(false);
+      setSearching(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      void runSearch(trimmed);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timeout);
+  }, [query, runSearch]);
 
   async function sendInvite(uniqueId?: string, label?: string) {
     if (!uniqueId) return;
@@ -266,13 +318,15 @@ export default function FriendsRequestsUnified() {
   }
 
   const onSubmitSearch = () => {
-    if (!searching) doSearch();
+    if (!searching) {
+      void runSearch(query, true);
+    }
   };
 
   const tabLabels = useMemo(
     () => ({
-      outgoing: t('friends.requests.tabOutgoing', 'Outgoing'),
-      incoming: t('friends.requests.tabIncoming', 'Incoming'),
+      outgoing: t('friends.requestsScreen.tabOutgoing', 'Outgoing'),
+      incoming: t('friends.requestsScreen.tabIncoming', 'Incoming'),
     }),
     [t]
   );
@@ -293,7 +347,7 @@ export default function FriendsRequestsUnified() {
           theme="active"
           icon={<Scan size={18} />}
         >
-          {t('friends.requests.scanInvite', 'Scan invite')}
+          {t('friends.requestsScreen.scanInvite', 'Scan invite')}
         </Button>
         <Button
           onPress={() => router.push('/tabs/friends/invite' as never)}
@@ -302,7 +356,7 @@ export default function FriendsRequestsUnified() {
           theme="gray"
           icon={<QrCode size={18} />}
         >
-          {t('friends.requests.showMyQr', 'Show my QR')}
+          {t('friends.requestsScreen.showMyQr', 'Show my QR')}
         </Button>
       </XStack>
 
@@ -312,7 +366,7 @@ export default function FriendsRequestsUnified() {
           w={LIST_W}
           value={query}
           onChangeText={setQuery}
-          placeholder={t('friends.search.placeholder', 'Enter uniqueId, e.g. USER#1234')}
+          placeholder={t('friends.search.placeholder', 'Enter User ID or Username')}
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"
@@ -332,6 +386,10 @@ export default function FriendsRequestsUnified() {
       {/* Search results */}
       {searching ? (
         <Spinner />
+      ) : results.length === 0 && hasSearched ? (
+        <Paragraph col="$gray10">
+          {t('friends.search.notFound', 'User not found')}
+        </Paragraph>
       ) : results.length > 0 ? (
         <>
           <Separator />
@@ -391,9 +449,7 @@ export default function FriendsRequestsUnified() {
             );
           })}
         </>
-      ) : (
-        <Paragraph col="$gray10">{t('friends.search.hint', 'Search by uniqueId to find someone')}</Paragraph>
-      )}
+      ) : null}
 
       {/* Tabs */}
       <Separator />
@@ -435,7 +491,9 @@ export default function FriendsRequestsUnified() {
         <>
           <Separator />
           {incoming.length === 0 ? (
-            <Paragraph col="$gray10">{t('friends.requests.emptyIncoming', 'No incoming requests')}</Paragraph>
+            <Paragraph col="$gray10">
+              {t('friends.requestsScreen.emptyIncoming', 'No incoming requests')}
+            </Paragraph>
           ) : (
             incoming.map((request: any, index: number) => {
               const name =
@@ -483,7 +541,9 @@ export default function FriendsRequestsUnified() {
         <>
           <Separator />
           {outgoing.length === 0 ? (
-            <Paragraph col="$gray10">{t('friends.requests.emptyOutgoing', 'No outgoing requests')}</Paragraph>
+            <Paragraph col="$gray10">
+              {t('friends.requestsScreen.emptyOutgoing', 'No outgoing requests')}
+            </Paragraph>
           ) : (
             outgoing.map((request: any, index: number) => {
               const name =
@@ -504,7 +564,7 @@ export default function FriendsRequestsUnified() {
                   avatarUrl={avatarUrl ?? undefined}
                   right={
                     <Paragraph size="$2" col="$gray10">
-                      {t('friends.requests.requestedLabel', 'Requested')}
+                      {t('friends.requestsScreen.requestedLabel', 'Requested')}
                     </Paragraph>
                   }
                 />

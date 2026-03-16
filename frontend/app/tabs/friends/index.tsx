@@ -71,7 +71,7 @@ export default function FriendsScreen() {
           {filteredFriends.length > 0 && (
             <YStack borderWidth={1} borderColor="$gray5" borderRadius={8} overflow="hidden">
               {filteredFriends.map((f, index) => (
-                <React.Fragment key={f.user?.id ?? f.userId ?? f.id}>
+                <React.Fragment key={f.user?.id ?? f.userId ?? f.uniqueId ?? index}>
                   <FriendListItem friend={f} />
                   {index < filteredFriends.length - 1 && <Separator />}
                 </React.Fragment>

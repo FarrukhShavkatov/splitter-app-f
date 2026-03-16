@@ -283,7 +283,7 @@ router.get(
  * @swagger
  * /friends/search:
  *   get:
- *     summary: Search user by uniqueId
+ *     summary: Search user by uniqueId or username
  *     tags: [Friends]
  *     security:
  *       - bearerAuth: []
@@ -309,19 +309,48 @@ router.get(
   authenticateToken,
   async (req: AuthRequest, res: Response) => {
     try {
-      const q = String(req.query.q || "").trim();
-      console.log("GET /friends/search q:", q);
-      if (!q) {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+      const rawQuery = String(req.query.q || "").trim();
+      console.log("GET /friends/search q:", rawQuery);
+      if (!rawQuery) {
         console.log("GET /friends/search empty query");
         return res.json([]);
       }
-      const user = await prisma.user.findUnique({
-        where: { uniqueId: q },
-        select: userPublicSelect,
-      });
-      const result = user
-        ? [{ ...user, avatarUrl: user.avatarUrl ?? getDefaultAvatarUrl() }]
-        : [];
+
+      const query = rawQuery.slice(0, 64);
+      if (query.length < 2) {
+        console.log("GET /friends/search short query");
+        return res.json([]);
+      }
+
+      const result = (
+        await prisma.user.findMany({
+          where: {
+            id: { not: req.user.id },
+            OR: [
+              {
+                uniqueId: {
+                  contains: query.toUpperCase(),
+                  mode: "insensitive",
+                },
+              },
+              {
+                username: {
+                  contains: query,
+                  mode: "insensitive",
+                },
+              },
+            ],
+          },
+          take: 20,
+          orderBy: [{ username: "asc" }, { uniqueId: "asc" }],
+          select: userPublicSelect,
+        })
+      ).map((user) => ({
+        ...user,
+        avatarUrl: user.avatarUrl ?? getDefaultAvatarUrl(),
+      }));
       console.log("GET /friends/search result count:", result.length);
       return res.json(result);
     } catch (err) {
@@ -408,11 +437,27 @@ router.post(
           return res.status(409).json({ error: "Request already sent" });
         if (existing.receiverId === me && existing.status === "PENDING")
           return res.status(409).json({ error: "Awaiting your response" });
+        // REJECTED or BLOCKED — allow re-sending by resetting to PENDING
+        if (existing.status === "REJECTED" || existing.status === "BLOCKED") {
+          const updated = await prisma.friendship.update({
+            where: { id: existing.id },
+            data: { requesterId: me, receiverId: target.id, status: "PENDING" },
+          });
+          return res.json({ success: true, action: "requested", id: updated.id });
+        }
       }
 
-      const created = await prisma.friendship.create({
-        data: { requesterId: me, receiverId: target.id },
-      });
+      let created;
+      try {
+        created = await prisma.friendship.create({
+          data: { requesterId: me, receiverId: target.id },
+        });
+      } catch (e: any) {
+        if (e?.code === "P2002") {
+          return res.status(409).json({ error: "Request already sent" });
+        }
+        throw e;
+      }
       console.log("/friends/request created:", { id: created.id });
       return res.json({ success: true, action: "requested", id: created.id });
     } catch (err) {

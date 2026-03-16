@@ -43,6 +43,49 @@
     "continue": "Davom etish",
     "back": "Orqaga"
   },
+  "friends": {
+    "title": "Do'stlar",
+    "requests": "So'rovlar",
+    "add": "Do'st qo'shish",
+    "empty": "Hali do'stlar yo'q. Qo'shish uchun + tugmasini bosing.",
+    "searchPlaceholder": "User ID yoki username kiriting",
+    "send": "So'rov yuborish",
+    "remove": "O'chirish",
+    "loading": "Yuklanmoqda...",
+    "error": "Yuklab bo'lmadi",
+    "common": {
+      "unknownUser": "Noma'lum foydalanuvchi",
+      "error": "Nimadir xato ketdi"
+    },
+    "status": {
+      "add": "Qo'shish",
+      "you": "Siz",
+      "friend": "Do'st",
+      "requested": "Yuborilgan",
+      "incoming": "Kiruvchi"
+    },
+    "search": {
+      "placeholder": "User ID yoki username kiriting",
+      "hint": "Kimnidir topish uchun User ID yoki username bo'yicha qidiring",
+      "button": "Qidirish",
+      "noResults": "Hech narsa topilmadi",
+      "notFound": "Foydalanuvchi topilmadi",
+      "error": "Qidiruv bajarilmadi",
+      "inviteSent": "{{target}} ga so'rov yuborildi",
+      "inviteFailed": "So'rov yuborib bo'lmadi"
+    },
+    "requestsScreen": {
+      "accepted": "{{target}} do'stlarga qo'shildi",
+      "rejected": "{{target}} dan kelgan so'rov rad etildi",
+      "tabOutgoing": "Chiquvchi",
+      "tabIncoming": "Kiruvchi",
+      "scanInvite": "Taklifni skanerlash",
+      "showMyQr": "Mening QR kodim",
+      "emptyIncoming": "Kiruvchi so'rovlar yo'q",
+      "emptyOutgoing": "Chiquvchi so'rovlar yo'q",
+      "requestedLabel": "Yuborilgan"
+    }
+  },
   "home": {
     "header": {
       "greeting": "Salom, {{name}}!",
@@ -166,6 +209,15 @@
     "finish": "Yakunlash",
     "history": "So'nggi hisoblar",
     "historyDetails": "Hisob tafsilotlari"
+  },
+  "history": {
+    "title": "Oxirgi hisoblar",
+    "subtitle": "Bosh sahifa",
+    "loading": "Yuklanmoqda...",
+    "empty": "Hali tarix mavjud emas",
+    "participants": "{{count}} ishtirokchi",
+    "participants_one": "{{count}} ishtirokchi",
+    "fallbackName": "Hisob"
   },
   "settings": {
     "language": {

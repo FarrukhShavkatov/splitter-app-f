@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import {
   YStack,
   XStack,
@@ -44,6 +44,9 @@ function useAutoNotice() {
 
 type UserLite = { uniqueId?: string; username?: string; displayName?: string; id?: number };
 
+const MIN_SEARCH_QUERY_LENGTH = 2;
+const SEARCH_DEBOUNCE_MS = 300;
+
 export default function FriendsSearchScreen() {
   const { search, send, requestsRaw, friends } = useFriendsStore();
   const meUniqueId = useAppStore((s) => s.user?.uniqueId);
@@ -51,10 +54,29 @@ export default function FriendsSearchScreen() {
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<UserLite[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [sentLocal, setSentLocal] = useState<Set<string>>(new Set());
+  const searchRequestIdRef = useRef(0);
   const notice = useAutoNotice();
+  const searchRef = useRef(search);
+  const tRef = useRef(t);
+  const showSuccessRef = useRef(notice.showSuccess);
+  const showErrorRef = useRef(notice.showError);
+
+  useEffect(() => {
+    searchRef.current = search;
+  }, [search]);
+
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
+
+  useEffect(() => {
+    showSuccessRef.current = notice.showSuccess;
+    showErrorRef.current = notice.showError;
+  }, [notice]);
 
   const outgoingSet = useMemo(() => {
     const set = new Set<string>();
@@ -83,22 +105,51 @@ export default function FriendsSearchScreen() {
     return set;
   }, [friends]);
 
-  async function doSearch() {
-    if (!query.trim()) return;
+  const runSearch = useCallback(async (value: string, notifyOnEmpty = false) => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.length < MIN_SEARCH_QUERY_LENGTH) {
+      searchRequestIdRef.current += 1;
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+
+    const requestId = ++searchRequestIdRef.current;
     setLoading(true);
     try {
-      const response = await search(query.trim());
+      const response = await searchRef.current(trimmed);
+      if (requestId !== searchRequestIdRef.current) return;
       setResults(response || []);
-      if (!response || response.length === 0) {
-        notice.showSuccess(t('friends.search.noResults', 'No results found'));
-      }
     } catch (error: any) {
-      notice.showError(error?.message ?? t('friends.search.error', 'Search failed'));
+      if (requestId !== searchRequestIdRef.current) return;
+      showErrorRef.current(
+        error?.message ?? tRef.current('friends.search.error', 'Search failed')
+      );
       setResults([]);
     } finally {
-      setLoading(false);
+      if (requestId === searchRequestIdRef.current) {
+        setHasSearched(true);
+        setLoading(false);
+      }
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed || trimmed.length < MIN_SEARCH_QUERY_LENGTH) {
+      searchRequestIdRef.current += 1;
+      setResults([]);
+      setHasSearched(false);
+      setLoading(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      void runSearch(trimmed);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timeout);
+  }, [query, runSearch]);
 
   async function sendInvite(uniqueId?: string, label?: string) {
     if (!uniqueId) return;
@@ -116,7 +167,9 @@ export default function FriendsSearchScreen() {
   }
 
   const onSubmit = () => {
-    if (!loading) doSearch();
+    if (!loading) {
+      void runSearch(query, true);
+    }
   };
 
   const statusLabels = useMemo(
@@ -137,13 +190,16 @@ export default function FriendsSearchScreen() {
           f={1}
           value={query}
           onChangeText={setQuery}
-          placeholder={t('friends.search.placeholder', 'Enter uniqueId, e.g. USER#1234')}
+          placeholder={t('friends.search.placeholder', 'Enter User ID or Username')}
           autoCapitalize="none"
           autoCorrect={false}
           onSubmitEditing={onSubmit}
           returnKeyType="search"
         />
-        <Button onPress={doSearch} disabled={!query || loading}>
+        <Button
+          onPress={() => void runSearch(query, true)}
+          disabled={query.trim().length < MIN_SEARCH_QUERY_LENGTH || loading}
+        >
           {loading ? <Spinner size="small" /> : t('friends.search.button', 'Search')}
         </Button>
       </XStack>
@@ -155,9 +211,11 @@ export default function FriendsSearchScreen() {
         <YStack gap="$2">
           <Spinner />
         </YStack>
-      ) : results.length === 0 ? (
-        <Paragraph col="$gray10">{t('friends.search.hint', 'Search by uniqueId to find someone')}</Paragraph>
-      ) : (
+      ) : results.length === 0 && hasSearched ? (
+        <Paragraph col="$gray10">
+          {t('friends.search.notFound', 'User not found')}
+        </Paragraph>
+      ) : results.length > 0 ? (
         results.map((user, index) => {
           const uid = user.uniqueId;
           const fallbackTitle = user.displayName || user.username || uid;
@@ -206,7 +264,7 @@ export default function FriendsSearchScreen() {
             />
           );
         })
-      )}
+      ) : null}
     </YStack>
   );
 }

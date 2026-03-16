@@ -180,6 +180,15 @@
     "history": "最近の明細",
     "historyDetails": "明細の詳細"
   },
+  "history": {
+    "title": "最近の明細",
+    "subtitle": "ホーム",
+    "loading": "読み込み中...",
+    "empty": "まだ履歴がありません",
+    "participants": "{{count}} 人",
+    "participants_one": "{{count}} 人",
+    "fallbackName": "明細"
+  },
   "settings": {
     "language": {
       "title": "言語",

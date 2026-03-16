@@ -13,11 +13,13 @@ const ZUserLoose = z.object({
 }).catchall(z.unknown())
 
 const ZFriendLoose = z.object({
+  id: z.number().optional(),
   user: ZUserLoose.optional(),
   uniqueId: z.string().optional(),
   username: z.string().optional(),
   avatarUrl: z.string().optional(),
 }).transform((f) => ({
+  id: f.id,
   uniqueId: f.uniqueId ?? f.user?.uniqueId,
   username: f.username ?? f.user?.username,
   avatarUrl: f.avatarUrl ?? f.user?.avatarUrl ?? null,
@@ -37,7 +39,7 @@ export const FriendsApi = {
     return ZRequestsPayload.parse(data)
   },
 
-  /** GET /friends/search?q=USER#1234 — поиск по uniqueId */
+  /** GET /friends/search?q=... — поиск по uniqueId или username */
   async search(q: string) {
     const { data } = await apiClient.get('/friends/search', { params: { q } })
     return z.array(ZUserLoose).parse(data)
