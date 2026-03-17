@@ -68,7 +68,7 @@ export function LanguageSegmentedControl({
               height,
               width: segmentWidth,
               borderRadius: 999,
-              backgroundColor: 'white',
+              backgroundColor: '#ffffff',
               transform: [{ translateX: thumbAnim }],
               // тонкая рамка и тень для объёма
               borderWidth: 1,

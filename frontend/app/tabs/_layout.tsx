@@ -1,16 +1,17 @@
 // app/tabs/_layout.tsx
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { YStack, XStack, Text, View } from 'tamagui';
-import { Home, Settings, Bell, ChevronLeft } from '@tamagui/lucide-icons';
+import { Home, Settings, Bell, ChevronLeft, Sun, Moon } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
 
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import UserAvatar from '@/shared/ui/UserAvatar';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
+import { useNotificationsStore } from '@/features/notifications/model/notifications.store';
 
 // --- Reusable Badge Component ---
 function DotBadge({ value }: { value?: number }) {
@@ -22,7 +23,7 @@ function DotBadge({ value }: { value?: number }) {
       w={20} h={20}
       br={999}
       ai="center" jc="center"
-      backgroundColor="#2ECC71"
+      backgroundColor="$primary"
     >
       <Text color="white" fontSize={10} fontWeight="700">
         {value}
@@ -53,6 +54,16 @@ function GlobalTabsHeader(props: any) {
   const onBackToHome = () => router.replace({ pathname: '/tabs' });
 
   const requestsCount = useFriendsStore((s) => s.requestsRaw?.incoming?.length ?? 0);
+  const notifUnread = useNotificationsStore((s) => s.unreadCount);
+  const badgeTotal = requestsCount + notifUnread;
+
+  const currentTheme = useAppStore((s) => s.theme);
+  const setTheme = useAppStore((s) => s.setTheme);
+  const isDark = currentTheme === 'dark';
+  const toggleTheme = useCallback(() => {
+    setTheme(isDark ? 'light' : 'dark');
+  }, [isDark, setTheme]);
+
   const displayName = user?.username || t('profile.labels.guest', 'Guest');
   const userInitial = displayName.slice(0, 1).toUpperCase();
 
@@ -80,10 +91,16 @@ function GlobalTabsHeader(props: any) {
         </XStack>
 
         <XStack ai="center" gap="$3">
-          <Pressable onPress={() => router.push('/tabs/friends/requests')}>
+          <Pressable onPress={toggleTheme} hitSlop={8}>
+            {isDark
+              ? <Sun size={22} color="$gray11" />
+              : <Moon size={22} color="$gray11" />}
+          </Pressable>
+
+          <Pressable onPress={() => router.push('/tabs/notifications')}>
             <View>
               <Bell size={22} color="$gray11" />
-              <DotBadge value={requestsCount} />
+              <DotBadge value={badgeTotal} />
             </View>
           </Pressable>
 
@@ -99,6 +116,13 @@ function GlobalTabsHeader(props: any) {
 export default function TabLayout() {
   const { user } = useAppStore();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const poll = () => useNotificationsStore.getState().fetchUnreadCount();
+    poll();
+    const interval = setInterval(poll, 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   const greetingName = user?.username || t('home.header.friendFallback', 'friend');
   const homeTitle = t('home.header.greeting', { name: greetingName });
@@ -168,6 +192,8 @@ export default function TabLayout() {
       <Tabs.Screen name="groups/invite" options={{ href: null, title: groupQrTitle }} />
 
       <Tabs.Screen name="scan-receipt" options={{ href: null, title: scanReceiptTitle }} />
+      <Tabs.Screen name="manual-receipt" options={{ href: null, title: t('navigation.manualReceipt', 'Manual Entry') }} />
+      <Tabs.Screen name="notifications" options={{ href: null, title: t('navigation.notifications', 'Notifications') }} />
       <Tabs.Screen name="sessions/participants" options={{ href: null, title: participantsTitle }} />
       <Tabs.Screen name="sessions/items-split" options={{ href: null, title: itemsSplitTitle }} />
       <Tabs.Screen name="sessions/finish" options={{ href: null, title: finishTitle }} />

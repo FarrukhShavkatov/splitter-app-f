@@ -92,7 +92,10 @@
       "friendFallback": "do'stim"
     },
     "scan": {
-      "cta": "Taklifni skanerlang"
+      "cta": "Chekni skanerlash"
+    },
+    "manual": {
+      "cta": "Qo'lda kiritish"
     },
     "actions": {
       "friends": "Do'stlar",
@@ -210,6 +213,25 @@
     "history": "So'nggi hisoblar",
     "historyDetails": "Hisob tafsilotlari"
   },
+  "notifications": {
+    "title": "Bildirishnomalar",
+    "empty": "Hali bildirishnoma yo'q",
+    "markAllRead": "Hammasini o'qilgan deb belgilash"
+  },
+  "manual": {
+    "sessionName": "Hisob nomi",
+    "sessionNamePlaceholder": "masalan, Kafedagi kechki ovqat",
+    "currency": "Valyuta",
+    "items": "Mahsulotlar",
+    "addItem": "Qo'shish",
+    "itemName": "Nomi",
+    "price": "Narxi",
+    "quantity": "Soni",
+    "total": "Jami",
+    "continue": "Davom etish",
+    "defaultName": "Qo'lda kiritilgan hisob",
+    "noItems": "Kamida bitta mahsulotni nomi va narxi bilan qo'shing."
+  },
   "history": {
     "title": "Oxirgi hisoblar",
     "subtitle": "Bosh sahifa",
@@ -227,6 +249,15 @@
         "en": "Ingliz tili",
         "ja": "Yapon tili",
         "uz": "O'zbek tili"
+      }
+    },
+    "appearance": {
+      "title": "Ko'rinish",
+      "description": "Yorug' yoki qorong'u mavzu tanlang yoki tizim sozlamalariga amal qiling.",
+      "options": {
+        "light": "Yorug'",
+        "dark": "Qorong'u",
+        "system": "Tizim"
       }
     }
   }

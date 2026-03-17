@@ -24,7 +24,7 @@ const TAB_W = 171;
 const TAB_H = 37;
 
 const TINT_REJECT = '#E74C3C1A';
-const TINT_ACCEPT = '#2ECC711A';
+const TINT_ACCEPT = 'rgba(46,204,113,0.1)';
 
 function useAutoNotice() {
   const [text, setText] = useState<string | undefined>();
@@ -528,7 +528,7 @@ export default function FriendsRequestsUnified() {
                         onPress={() => accept(fromId, name, uid)}
                         disabled={isBusy}
                       >
-                        <CircleCheck size={16} color="#2ECC71" />
+                        <CircleCheck size={16} color="$primary" />
                       </IconPill>
                     </XStack>
                   }

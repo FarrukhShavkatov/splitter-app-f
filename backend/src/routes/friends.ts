@@ -4,6 +4,7 @@ import { prisma } from "../config/prisma.js";
 import { getDefaultAvatarUrl } from "../config/app.js";
 import jwt from "jsonwebtoken";
 import { authenticateToken, type AuthRequest } from "../middleware/auth.js";
+import { createNotification } from "./notifications.js";
 
 const router = Router();
 
@@ -398,10 +399,16 @@ router.post(
         return res.status(400).json({ error: "uniqueId is required" });
       }
 
-      const target = await prisma.user.findUnique({
-        where: { uniqueId: uniqueId.trim() },
-        select: { id: true, uniqueId: true, username: true },
-      });
+      const [target, requester] = await Promise.all([
+        prisma.user.findUnique({
+          where: { uniqueId: uniqueId.trim() },
+          select: { id: true, uniqueId: true, username: true },
+        }),
+        prisma.user.findUnique({
+          where: { id: me },
+          select: { username: true },
+        }),
+      ]);
       if (!target) return res.status(404).json({ error: "User not found" });
       if (target.id === me)
         return res.status(400).json({ error: "You cannot add yourself" });
@@ -443,6 +450,7 @@ router.post(
             where: { id: existing.id },
             data: { requesterId: me, receiverId: target.id, status: "PENDING" },
           });
+          createNotification(target.id, "FRIEND_REQUEST", "Friend request", `${requester?.username ?? "Someone"} sent you a friend request`);
           return res.json({ success: true, action: "requested", id: updated.id });
         }
       }
@@ -459,6 +467,7 @@ router.post(
         throw e;
       }
       console.log("/friends/request created:", { id: created.id });
+      createNotification(target.id, "FRIEND_REQUEST", "Friend request", `${requester?.username ?? "Someone"} sent you a friend request`);
       return res.json({ success: true, action: "requested", id: created.id });
     } catch (err) {
       console.error("/friends/request error:", err);
@@ -528,11 +537,15 @@ router.patch(
       if (!fr || fr.status !== "PENDING") {
         return res.status(404).json({ error: "Request not found" });
       }
-      const updated = await prisma.friendship.update({
-        where: { id: fr.id },
-        data: { status: "ACCEPTED" },
-      });
+      const [updated, acceptor] = await Promise.all([
+        prisma.friendship.update({
+          where: { id: fr.id },
+          data: { status: "ACCEPTED" },
+        }),
+        prisma.user.findUnique({ where: { id: me }, select: { username: true } }),
+      ]);
       console.log("/friends/accept updated:", { id: updated.id });
+      createNotification(otherId, "FRIEND_ACCEPTED", "Friend request accepted", `${acceptor?.username ?? "Someone"} accepted your friend request`);
       return res.json({ success: true, id: updated.id });
     } catch (err) {
       console.error("/friends/accept error:", err);

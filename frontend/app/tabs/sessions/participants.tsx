@@ -242,7 +242,7 @@ export default function SessionParticipantsScreen() {
       borderRadius={10}
       borderWidth={1}
       borderColor="#D9D9D9"
-      backgroundColor={on ? '#2ECC71' : 'transparent'}
+      backgroundColor={on ? '$primary' : 'transparent'}
       ai="center"
       jc="center"
     >
@@ -265,8 +265,8 @@ export default function SessionParticipantsScreen() {
       px={12}
       borderRadius={18}
       borderWidth={1}
-      borderColor={active ? '#2ECC71' : '#D9D9D9'}
-      backgroundColor={active ? '#2ECC71' : 'transparent'}
+      borderColor={active ? '$primary' : '#D9D9D9'}
+      backgroundColor={active ? '$primary' : 'transparent'}
       ai="center"
       jc="center"
     >
@@ -380,7 +380,7 @@ export default function SessionParticipantsScreen() {
           width={358}
           height={41}
           borderRadius={10}
-          backgroundColor="#2ECC71"
+          backgroundColor="$primary"
           ai="center"
           jc="center"
           opacity={canNext ? 1 : 0.5}

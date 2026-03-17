@@ -736,7 +736,7 @@ export default function ItemsSplitScreen() {
 
   const ProgressBar = ({ value }: { value: number }) => (
     <YStack h={8} w="100%" br={999} bg="$gray5" overflow="hidden">
-      <YStack h="100%" w={`${Math.max(0, Math.min(100, value))}%`} bg="#2ECC71" />
+      <YStack h="100%" w={`${Math.max(0, Math.min(100, value))}%`} bg="$primary" />
     </YStack>
   );
 
@@ -757,9 +757,9 @@ export default function ItemsSplitScreen() {
       px={12}
       py={10}
       borderRadius={8}
-      bg={active ? '#2ECC71' : '$backgroundPress'}
+      bg={active ? '$primary' : '$backgroundPress'}
       borderWidth={1}
-      borderColor={active ? '#2ECC71' : '#E4E7EB'}
+      borderColor={active ? '$primary' : '#E4E7EB'}
     >
       <XStack ai="center" gap="$2">
         {icon}
@@ -865,7 +865,7 @@ export default function ItemsSplitScreen() {
                   w="100%"
                   borderWidth={1}
                   borderColor={
-                    isCountAndMissing ? '#E74C3C' : assigned ? '#2ECC71' : '#E4E7EB'
+                    isCountAndMissing ? '#E74C3C' : assigned ? '$primary' : '#E4E7EB'
                   }
                   borderRadius={12}
                   bg="$color1"
@@ -896,7 +896,7 @@ export default function ItemsSplitScreen() {
                         <Text fontSize={12} color="$gray10">
                           {priceParts.currency}
                         </Text>
-                        <Text fontSize={16} fontWeight="700" color="#2ECC71">
+                        <Text fontSize={16} fontWeight="700" color="$primary">
                           {priceParts.amount}
                         </Text>
                       </XStack>
@@ -909,7 +909,7 @@ export default function ItemsSplitScreen() {
                         px={assigned ? 16 : 12}
                         py={assigned ? 6 : undefined}
                         borderRadius={assigned ? 5 : 6}
-                        bg={assigned ? '#2ECC711A' : '$backgroundPress'}
+                        bg={assigned ? 'rgba(46,204,113,0.1)' : '$backgroundPress'}
                         borderWidth={assigned ? 0 : 1}
                         borderColor={assigned ? 'transparent' : '#E4E7EB'}
                         ai="center"
@@ -918,7 +918,7 @@ export default function ItemsSplitScreen() {
                         <Text
                           fontSize={14}
                           fontWeight="600"
-                          color={assigned ? '#2ECC71' : '$gray11'}
+                          color={assigned ? '$primary' : '$gray11'}
                         >
                           {assigned ? 'Change' : 'Who?'}
                         </Text>
@@ -961,7 +961,7 @@ export default function ItemsSplitScreen() {
               onPress={onContinue}
               height={41}
               borderRadius={10}
-              bg="#2ECC71"
+              bg="$primary"
               ai="center"
               jc="center"
               pressStyle={finalizing ? undefined : { opacity: 0.9 }}
@@ -1008,7 +1008,7 @@ export default function ItemsSplitScreen() {
                 <Text fontSize={12} color="$gray10">
                   {editingPriceParts.currency}
                 </Text>
-                <Text fontSize={16} fontWeight="700" color="#2ECC71">
+                <Text fontSize={16} fontWeight="700" color="$primary">
                   {editingPriceParts.amount}
                 </Text>
               </XStack>
@@ -1035,7 +1035,7 @@ export default function ItemsSplitScreen() {
               <Text fontWeight="600">Assign to:</Text>
               <XStack ai="center" gap="$2">
                 <Button chromeless onPress={modalAll}>
-                  <Text color="#2ECC71" fontWeight="700">
+                  <Text color="$primary" fontWeight="700">
                     All
                   </Text>
                 </Button>
@@ -1073,7 +1073,7 @@ export default function ItemsSplitScreen() {
                         jc="space-between"
                         px={16}
                         borderWidth={1}
-                        borderColor={isSelected ? '#2ECC71' : '#E4E7EB'}
+                        borderColor={isSelected ? '$primary' : '#E4E7EB'}
                         borderRadius={12}
                         bg="$color1"
                       >
@@ -1123,11 +1123,11 @@ export default function ItemsSplitScreen() {
 
                           <Circle
                             size={22}
-                            borderColor="#2ECC71"
+                            borderColor="$primary"
                             borderWidth={2}
                             ai="center"
                             jc="center"
-                            bg={isSelected ? '#2ECC71' : 'transparent'}
+                            bg={isSelected ? '$primary' : 'transparent'}
                           >
                             {isSelected && <Check size={14} color="white" />}
                           </Circle>
@@ -1140,11 +1140,11 @@ export default function ItemsSplitScreen() {
             </ScrollView>
 
             {effectiveMode === 'equal' && editing.assignedTo.length > 0 && (
-              <YStack mt="$2" p={8} borderRadius={5} bg="#2ECC711A">
-                <Text fontSize={13} fontWeight="700" color="#2ECC71">
+              <YStack mt="$2" p={8} borderRadius={5} bg="rgba(46,204,113,0.1)">
+                <Text fontSize={13} fontWeight="700" color="$primary">
                   Assigned to {editing.assignedTo.length} participant(s)
                 </Text>
-                <Text fontSize={12} color="#2ECC71">
+                <Text fontSize={12} color="$primary">
                   Price split equally:{' '}
                   {fmtCurrency(editingTotal / Math.max(1, editing.assignedTo.length))} each
                 </Text>
@@ -1153,12 +1153,12 @@ export default function ItemsSplitScreen() {
 
             {effectiveMode === 'count' &&
               Object.values(editing.perPersonCount).reduce((a, b) => a + (b || 0), 0) > 0 && (
-                <YStack mt="$2" p={8} borderRadius={5} bg="#2ECC711A">
-                  <Text fontSize={13} fontWeight="700" color="#2ECC71">
+                <YStack mt="$2" p={8} borderRadius={5} bg="rgba(46,204,113,0.1)">
+                  <Text fontSize={13} fontWeight="700" color="$primary">
                     {Object.values(editing.perPersonCount).reduce((a, b) => a + (b || 0), 0)}{' '}
                     unit(s) assigned
                   </Text>
-                  <Text fontSize={12} color="#2ECC71">
+                  <Text fontSize={12} color="$primary">
                     Per unit: {fmtCurrency(editingItem?.price || 0)}
                   </Text>
                 </YStack>
@@ -1184,7 +1184,7 @@ export default function ItemsSplitScreen() {
                 width={155}
                 height={41}
                 borderRadius={10}
-                bg="#2ECC71"
+                bg="$primary"
                 ai="center"
                 jc="center"
                 disabled={saving}
@@ -1209,8 +1209,8 @@ export default function ItemsSplitScreen() {
           bg="rgba(0,0,0,0.25)"
         >
           <YStack w={390} h={156} ai="center" jc="center" bg="$color1" br={12}>
-            <Spinner size="large" color="#2ECC71" />
-            <Text mt="$2" color="#2ECC71" fontSize={16} fontWeight="600">
+            <Spinner size="large" color="$primary" />
+            <Text mt="$2" color="$primary" fontSize={16} fontWeight="600">
               Saving split...
             </Text>
           </YStack>
@@ -1226,7 +1226,7 @@ export default function ItemsSplitScreen() {
           jc="center"
           bg="rgba(0,0,0,0.25)"
         >
-          <YStack w={390} h={156} ai="center" jc="center" bg="#2ECC71" br={12}>
+          <YStack w={390} h={156} ai="center" jc="center" bg="$primary" br={12}>
             <Check size={42} color="white" />
             <Text mt="$2" color="white" fontSize={18} fontWeight="700">
               Bill confirmed

@@ -94,7 +94,10 @@
       "friendFallback": "friend"
     },
     "scan": {
-      "cta": "Scan invite"
+      "cta": "Scan receipt"
+    },
+    "manual": {
+      "cta": "Manual entry"
     },
     "actions": {
       "friends": "Friends",
@@ -206,11 +209,31 @@
     "friendQr": "My Friend QR",
     "groupQr": "Group QR",
     "scanReceipt": "Scan Receipt",
+    "manualReceipt": "Manual Entry",
     "participants": "Participants",
     "itemsSplit": "Items Split",
     "finish": "Finish",
     "history": "Recent bills",
     "historyDetails": "Bill details"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "markAllRead": "Mark all read"
+  },
+  "manual": {
+    "sessionName": "Bill name",
+    "sessionNamePlaceholder": "e.g. Dinner at cafe",
+    "currency": "Currency",
+    "items": "Items",
+    "addItem": "Add item",
+    "itemName": "Item name",
+    "price": "Price",
+    "quantity": "Qty",
+    "total": "Total",
+    "continue": "Continue",
+    "defaultName": "Manual bill",
+    "noItems": "Add at least one item with a name and price."
   },
   "history": {
     "title": "Recent bills",
@@ -229,6 +252,15 @@
         "en": "English",
         "ja": "Japanese",
         "uz": "Uzbek"
+      }
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "Choose a light or dark theme, or follow system settings.",
+      "options": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
       }
     }
   }

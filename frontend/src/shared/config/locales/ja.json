@@ -62,7 +62,10 @@
       "friendFallback": "友だち"
     },
     "scan": {
-      "cta": "招待をスキャンする"
+      "cta": "レシートをスキャン"
+    },
+    "manual": {
+      "cta": "手動入力"
     },
     "actions": {
       "friends": "友だち",
@@ -180,6 +183,25 @@
     "history": "最近の明細",
     "historyDetails": "明細の詳細"
   },
+  "notifications": {
+    "title": "通知",
+    "empty": "通知はまだありません",
+    "markAllRead": "すべて既読にする"
+  },
+  "manual": {
+    "sessionName": "明細名",
+    "sessionNamePlaceholder": "例: カフェでの夕食",
+    "currency": "通貨",
+    "items": "品目",
+    "addItem": "追加",
+    "itemName": "品名",
+    "price": "価格",
+    "quantity": "数量",
+    "total": "合計",
+    "continue": "続ける",
+    "defaultName": "手動入力の明細",
+    "noItems": "名前と価格のある品目を1つ以上追加してください。"
+  },
   "history": {
     "title": "最近の明細",
     "subtitle": "ホーム",
@@ -197,6 +219,15 @@
         "en": "英語",
         "ja": "日本語",
         "uz": "ウズベク語"
+      }
+    },
+    "appearance": {
+      "title": "外観",
+      "description": "ライトまたはダークテーマを選択するか、システム設定に従います。",
+      "options": {
+        "light": "ライト",
+        "dark": "ダーク",
+        "system": "システム"
       }
     }
   }

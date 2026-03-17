@@ -4,6 +4,7 @@ import { prisma } from "../config/prisma.js";
 import type { Prisma } from "@prisma/client";
 import { authenticateToken, type AuthRequest } from "../middleware/auth.js";
 import { parseReceipt } from "../services/receiptParser.js";
+import { createNotification } from "./notifications.js";
 
 const router = Router();
 
@@ -681,6 +682,26 @@ router.post(
           finalizedAt,
         },
       });
+
+      const participantUsers = await prisma.user.findMany({
+        where: { uniqueId: { in: participantUniqueIds } },
+        select: { id: true, uniqueId: true },
+      });
+      const creatorUser = await prisma.user.findUnique({
+        where: { id: session.creatorId },
+        select: { username: true },
+      });
+      for (const pu of participantUsers) {
+        if (pu.id !== session.creatorId) {
+          createNotification(
+            pu.id,
+            "SESSION_FINALIZED",
+            "Bill finalized",
+            `${creatorUser?.username ?? "Someone"} finalized "${sessionName || "a bill"}" — ${currency} ${grandTotal}`,
+            { sessionId: session.id }
+          );
+        }
+      }
 
       return res.json(responsePayload);
     } catch (err) {

@@ -198,7 +198,7 @@ export default function LoginForm() {
 
             {/* Forgot */}
             <XStack justifyContent="flex-end">
-              <Text fontSize="$3" color="#2ECC71" fontWeight="500">
+              <Text fontSize="$3" color="$primary" fontWeight="500">
                 {t('auth.forgotPassword', 'Forgot Password?')}
               </Text>
             </XStack>

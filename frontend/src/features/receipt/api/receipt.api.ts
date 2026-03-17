@@ -1,4 +1,4 @@
-﻿import { apiClient } from '@/features/auth/api';
+import { apiClient } from '@/features/auth/api';
 
 export type ReceiptImagePayload = {
   mimeType: string;
@@ -101,7 +101,22 @@ const normalizeError = (error: unknown): Error => {
   return new Error('Unexpected error');
 };
 
+export interface CreateSessionResponse {
+  id: number;
+  creatorId: number;
+  groupId: number | null;
+  serviceFee: number;
+  total: number;
+}
+
 export const ReceiptApi = {
+  async createSession(groupId?: number): Promise<CreateSessionResponse> {
+    const { data } = await apiClient.post<CreateSessionResponse>('/sessions', {
+      groupId: groupId ?? null,
+    });
+    return data;
+  },
+
   async parse(payload: ParseReceiptRequest): Promise<ParseReceiptResponse> {
     try {
       // console.log('[API] POST /sessions/scan');

@@ -24,7 +24,7 @@ const sizeStyles: Record<Size, { height: '$3' | '$4' | '$5'; paddingHorizontal: 
 
 const variantStyles: Record<Variant, { backgroundColor: string; color: string; borderWidth?: number; borderColor?: string }> = {
   primary: {
-    backgroundColor: '#2ECC71',
+    backgroundColor: '$primary',
     color: '#FFFFFF',
   },
   secondary: {

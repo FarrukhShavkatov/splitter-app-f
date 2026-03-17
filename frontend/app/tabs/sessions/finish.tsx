@@ -453,11 +453,11 @@ export default function FinishScreen() {
               gap="$1"
               px="$3"
               py="$1"
-              bg="#2ECC711A"
+              bg="rgba(46,204,113,0.1)"
               borderRadius={16}
             >
-              <Check size={14} color="#2ECC71" />
-              <Text fontSize={12} fontWeight="600" color="#2ECC71" textTransform="capitalize">
+              <Check size={14} color="$primary" />
+              <Text fontSize={12} fontWeight="600" color="$primary" textTransform="capitalize">
                 {status}
               </Text>
             </XStack>
@@ -469,19 +469,19 @@ export default function FinishScreen() {
           <YStack
             p="$3"
             borderWidth={1}
-            borderColor="#2ECC71"
+            borderColor="$primary"
             borderRadius={12}
-            bg="#2ECC711A"
+            bg="rgba(46,204,113,0.1)"
             mb="$3"
           >
             <Text fontSize={13} color="$gray11" mb="$1">
               Total Amount
             </Text>
             <XStack ai="baseline" gap="$1">
-              <Text fontSize={14} color="#2ECC71">
+              <Text fontSize={14} color="$primary">
                 {grandTotalParts.currency}
               </Text>
-              <Text fontSize={24} fontWeight="700" color="#2ECC71">
+              <Text fontSize={24} fontWeight="700" color="$primary">
                 {grandTotalParts.amount}
               </Text>
             </XStack>
@@ -526,7 +526,7 @@ export default function FinishScreen() {
                     <Text fontSize={12} color="$gray10">
                       {parts.currency}
                     </Text>
-                    <Text fontSize={18} fontWeight="700" color="#2ECC71">
+                    <Text fontSize={18} fontWeight="700" color="$primary">
                       {parts.amount}
                     </Text>
                   </XStack>
@@ -619,7 +619,7 @@ export default function FinishScreen() {
           unstyled
           height={41}
           borderRadius={10}
-          bg="#2ECC71"
+          bg="$primary"
           ai="center"
           jc="center"
           onPress={() => router.replace('/tabs')}

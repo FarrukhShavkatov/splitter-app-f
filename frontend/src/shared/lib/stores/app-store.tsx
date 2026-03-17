@@ -21,7 +21,7 @@ interface AppStore {
   isLoading: boolean;
   
   // App settings
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'system';
   language: LanguageCode;
   
   // Actions
@@ -30,7 +30,7 @@ interface AppStore {
   setAuth: (token: string, user: User) => void;
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
-  setTheme: (theme: 'light' | 'dark') => void;
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
   setLanguage: (language: LanguageCode) => void;
 }
 

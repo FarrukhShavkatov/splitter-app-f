@@ -3,7 +3,7 @@ import { Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { YStack, XStack, Text, View, Circle } from 'tamagui';
-import { ScanLine, Users, UserPlus, RefreshCw } from '@tamagui/lucide-icons';
+import { ScanLine, Users, UserPlus, RefreshCw, PenLine } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
@@ -86,7 +86,7 @@ function AvatarStack({ participantIds }: { participantIds: string[] }) {
           br={14}
           backgroundColor="$gray3"
           borderWidth={2}
-          borderColor="white"
+          borderColor="$background"
           ml={shown.length === 0 ? 0 : -8}
           ai="center"
           jc="center"
@@ -128,7 +128,7 @@ function BillCard({
         borderWidth={1}
         borderColor="$gray6"
         p="$3"
-        backgroundColor="white"
+        backgroundColor="$background"
       >
         <XStack jc="space-between" ai="center">
           <YStack>
@@ -139,7 +139,7 @@ function BillCard({
               {sub}
             </Text>
           </YStack>
-          <Text fontSize={14} lineHeight={22} fontWeight="700" color="#2ECC71">
+          <Text fontSize={14} lineHeight={22} fontWeight="700" color="$primary">
             {amountLabel}
           </Text>
         </XStack>
@@ -191,23 +191,36 @@ export default function HomePage() {
   const openFriends = () => router.push('/tabs/friends');
   const openGroups = () => router.push('/tabs/groups');
   const onScan = () => router.push('/tabs/scan-receipt');
+  const onManualEntry = () => router.push('/tabs/manual-receipt');
   const openAllSessions = () => router.push('/tabs/sessions/history');
 
   const recent = useMemo<SessionHistoryEntry[]>(() => sessions.slice(0, 3), [sessions]);
 
   return (
     <ScreenContainer>
-      <YStack f={1} ai="center" bg="white">
-        <YStack ai="center" mt="$6" mb="$4">
-          <Pressable onPress={onScan}>
-            <Circle size={64} bg="#2ECC71" ai="center" jc="center" elevationAndroid={4}>
-              <ScanLine size={26} color="white" />
-            </Circle>
-          </Pressable>
-          <Text mt="$2" color="$gray10" fontSize={13}>
-            {t('home.scan.cta', 'Scan invite')}
-          </Text>
-        </YStack>
+      <YStack f={1} ai="center" bg="$background">
+        <XStack ai="center" jc="center" gap="$6" mt="$6" mb="$4">
+          <YStack ai="center">
+            <Pressable onPress={onScan}>
+              <Circle size={64} bg="$primary" ai="center" jc="center" elevationAndroid={4}>
+                <ScanLine size={26} color="white" />
+              </Circle>
+            </Pressable>
+            <Text mt="$2" color="$gray10" fontSize={13}>
+              {t('home.scan.cta', 'Scan receipt')}
+            </Text>
+          </YStack>
+          <YStack ai="center">
+            <Pressable onPress={onManualEntry}>
+              <Circle size={64} bg="$primary" ai="center" jc="center" elevationAndroid={4}>
+                <PenLine size={26} color="white" />
+              </Circle>
+            </Pressable>
+            <Text mt="$2" color="$gray10" fontSize={13}>
+              {t('home.manual.cta', 'Manual entry')}
+            </Text>
+          </YStack>
+        </XStack>
 
         <XStack w={358} jc="space-between" mb="$5">
           <ActionButton
@@ -240,7 +253,7 @@ export default function HomePage() {
             </Pressable>
 
             <Pressable onPress={openAllSessions}>
-              <Text color="#2ECC71">
+              <Text color="$primary">
                 {t('home.recent.showMore', 'Show more')}
               </Text>
             </Pressable>

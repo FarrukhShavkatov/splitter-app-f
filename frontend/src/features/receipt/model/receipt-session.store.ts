@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand';
+import { create } from 'zustand';
 import type {
   FinalizeReceiptResponse,
   FinalizeReceiptItemPayload,
@@ -78,6 +78,7 @@ interface ReceiptSessionStore {
   setLastFinishPayload: (payload?: FinishPayload) => void;
 
   parseReceipt: (payload: ParseReceiptRequest) => Promise<ParseReceiptResponse>;
+  createManualSession: (sessionName: string, currency: string, items: Omit<ReceiptSplitItem, 'splitMode' | 'assignedTo' | 'perPersonCount'>[]) => Promise<void>;
   finalizeSession: () => Promise<FinalizeReceiptResponse>;
   reset: () => void;
 }
@@ -162,6 +163,41 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
       return response;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to parse receipt';
+      set({ parsing: false, parseError: message });
+      throw error;
+    }
+  },
+
+  createManualSession: async (sessionName, currency, rawItems) => {
+    set({ parsing: true, parseError: undefined });
+    try {
+      const created = await ReceiptApi.createSession();
+      const splitItems: ReceiptSplitItem[] = rawItems.map((item) => ({
+        ...item,
+        splitMode: item.quantity > 1 ? 'count' : 'equal',
+        assignedTo: [],
+        perPersonCount: {},
+      }));
+
+      const grandTotal = splitItems.reduce((sum, i) => sum + i.totalPrice, 0);
+
+      set({
+        parsing: false,
+        parseError: undefined,
+        session: {
+          sessionId: created.id,
+          sessionName,
+          language: 'en',
+          summary: { grandTotal, currency },
+        },
+        items: splitItems,
+        participants: [],
+        currency,
+        finalized: undefined,
+        finalizeError: undefined,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create session';
       set({ parsing: false, parseError: message });
       throw error;
     }

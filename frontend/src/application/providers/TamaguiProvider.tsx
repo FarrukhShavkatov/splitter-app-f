@@ -1,9 +1,11 @@
 // src/application/providers/TamaguiProvider.tsx
 import React from 'react'
+import { useColorScheme } from 'react-native'
 import { TamaguiProvider as Provider } from '@tamagui/core'
 import { PortalProvider } from '@tamagui/portal'
 import { useFonts } from 'expo-font'
 import config from '../../../tamagui.config'
+import { useAppStore } from '@/shared/lib/stores/app-store'
 
 interface TamaguiProviderProps {
   children: React.ReactNode
@@ -15,12 +17,20 @@ export const TamaguiProvider: React.FC<TamaguiProviderProps> = ({ children }) =>
     InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
   })
 
+  const themeSetting = useAppStore((s) => s.theme)
+  const systemScheme = useColorScheme()
+
+  const resolvedTheme =
+    themeSetting === 'system'
+      ? (systemScheme === 'dark' ? 'dark' : 'light')
+      : themeSetting
+
   if (!fontsLoaded) {
     return null
   }
 
   return (
-    <Provider config={config} defaultTheme="light">
+    <Provider config={config} defaultTheme={resolvedTheme}>
       <PortalProvider>
         {children}
       </PortalProvider>
