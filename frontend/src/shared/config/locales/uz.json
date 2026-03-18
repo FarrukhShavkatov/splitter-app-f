@@ -218,6 +218,21 @@
     "empty": "Hali bildirishnoma yo'q",
     "markAllRead": "Hammasini o'qilgan deb belgilash"
   },
+  "scanner": {
+    "title": "Chekni skanerlash",
+    "sessionName": "Sessiya nomi",
+    "sessionNamePlaceholder": "masalan, Oktabrdagi kafe",
+    "language": "Til",
+    "allowCamera": "Kameraga ruxsat bering",
+    "uploading": "Chek yuklanmoqda...",
+    "lastPhoto": "Oxirgi rasm saqlangan; qayta suratga olish uni almashtirad.",
+    "scan": "Chekni skanerlash",
+    "processing": "Qayta ishlanmoqda...",
+    "useMock": "Namunali chek",
+    "captureError": "Chek suratga olinmadi. Iltimos, qayta urinib ko'ring.",
+    "prepareError": "Chek rasmini yuklashga tayyorlab bo'lmadi.",
+    "genericError": "Chekni yuborishda xatolik yuz berdi"
+  },
   "manual": {
     "sessionName": "Hisob nomi",
     "sessionNamePlaceholder": "masalan, Kafedagi kechki ovqat",

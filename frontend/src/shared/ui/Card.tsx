@@ -13,7 +13,7 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   return (
     <YStack
-      backgroundColor="$white1"
+      backgroundColor="$background"
       borderRadius="$6"
       borderWidth={1}
       borderColor="$gray5"

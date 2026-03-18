@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, Pressable } from 'react-native';
 import { YStack, XStack, Text, Input as TInput, Separator } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -78,136 +78,190 @@ export default function ManualReceiptScreen() {
   }, [sessionName, items, currency, createManualSession, router, t]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView
+    <YStack f={1} bg="$background">
+      <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+        <KeyboardAvoidingView
           style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
-          keyboardShouldPersistTaps="handled"
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <YStack f={1} p="$4" gap="$4">
-            {/* Session name */}
-            <YStack gap="$2">
-              <Text fontSize={14} fontWeight="600">{t('manual.sessionName', 'Bill name')}</Text>
-              <TInput
-                value={sessionName}
-                onChangeText={setSessionName}
-                placeholder={t('manual.sessionNamePlaceholder', 'e.g. Dinner at cafe')}
-                borderRadius={10}
-                h={44}
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <YStack f={1} p="$4" gap="$4">
+              {/* Session name */}
+              <YStack gap="$2">
+                <Text fontSize={14} fontWeight="600" color="$gray12">
+                  {t('manual.sessionName', 'Bill name')}
+                </Text>
+                <TInput
+                  value={sessionName}
+                  onChangeText={setSessionName}
+                  placeholder={t('manual.sessionNamePlaceholder', 'e.g. Dinner at cafe')}
+                  borderRadius={10}
+                  h={44}
+                  backgroundColor="$background"
+                  borderWidth={1}
+                  borderColor="$gray7"
+                  color="$gray12"
+                  placeholderTextColor="$gray9"
+                  focusStyle={{ borderColor: '$green9' }}
+                />
+              </YStack>
+
+              {/* Currency */}
+              <YStack gap="$2">
+                <Text fontSize={14} fontWeight="600" color="$gray12">
+                  {t('manual.currency', 'Currency')}
+                </Text>
+                <XStack gap="$2" flexWrap="wrap">
+                  {CURRENCIES.map((c) => (
+                    <Button
+                      key={c}
+                      title={c}
+                      variant={c === currency ? 'primary' : 'outline'}
+                      size="small"
+                      onPress={() => setCurrency(c)}
+                    />
+                  ))}
+                </XStack>
+              </YStack>
+
+              <Separator borderColor="$gray5" />
+
+              {/* Items */}
+              <YStack gap="$3">
+                <XStack jc="space-between" ai="center">
+                  <Text fontSize={16} fontWeight="600" color="$gray12">
+                    {t('manual.items', 'Items')}
+                  </Text>
+                  <Pressable
+                    onPress={addItem}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                  >
+                    <Plus size={16} color="$primary" />
+                    <Text fontSize={14} fontWeight="600" color="$primary">
+                      {t('manual.addItem', 'Add item')}
+                    </Text>
+                  </Pressable>
+                </XStack>
+
+                {items.map((item, index) => (
+                  <YStack
+                    key={item.localId}
+                    gap="$2"
+                    p="$3"
+                    borderWidth={1}
+                    borderColor="$gray6"
+                    borderRadius={12}
+                    backgroundColor="$gray2"
+                  >
+                    <XStack jc="space-between" ai="center">
+                      <Text fontSize={13} color="$gray10" fontWeight="500">
+                        #{index + 1}
+                      </Text>
+                      {items.length > 1 && (
+                        <Pressable
+                          onPress={() => removeItem(item.localId)}
+                          hitSlop={8}
+                        >
+                          <Trash2 size={18} color="$red10" />
+                        </Pressable>
+                      )}
+                    </XStack>
+
+                    <TInput
+                      value={item.name}
+                      onChangeText={(v) => updateItem(item.localId, 'name', v)}
+                      placeholder={t('manual.itemName', 'Item name')}
+                      h={40}
+                      borderRadius={8}
+                      backgroundColor="$background"
+                      borderWidth={1}
+                      borderColor="$gray7"
+                      color="$gray12"
+                      placeholderTextColor="$gray9"
+                      focusStyle={{ borderColor: '$green9' }}
+                    />
+
+                    <XStack gap="$2">
+                      <YStack f={1} gap="$1">
+                        <Text fontSize={12} color="$gray10">
+                          {t('manual.price', 'Price')}
+                        </Text>
+                        <TInput
+                          value={item.price}
+                          onChangeText={(v) => updateItem(item.localId, 'price', v)}
+                          placeholder="0"
+                          keyboardType="decimal-pad"
+                          h={40}
+                          borderRadius={8}
+                          backgroundColor="$background"
+                          borderWidth={1}
+                          borderColor="$gray7"
+                          color="$gray12"
+                          placeholderTextColor="$gray9"
+                          focusStyle={{ borderColor: '$green9' }}
+                        />
+                      </YStack>
+                      <YStack w={80} gap="$1">
+                        <Text fontSize={12} color="$gray10">
+                          {t('manual.quantity', 'Qty')}
+                        </Text>
+                        <TInput
+                          value={item.quantity}
+                          onChangeText={(v) => updateItem(item.localId, 'quantity', v)}
+                          placeholder="1"
+                          keyboardType="number-pad"
+                          h={40}
+                          borderRadius={8}
+                          textAlign="center"
+                          backgroundColor="$background"
+                          borderWidth={1}
+                          borderColor="$gray7"
+                          color="$gray12"
+                          placeholderTextColor="$gray9"
+                          focusStyle={{ borderColor: '$green9' }}
+                        />
+                      </YStack>
+                    </XStack>
+                  </YStack>
+                ))}
+              </YStack>
+
+              <Separator borderColor="$gray5" />
+
+              {/* Total */}
+              <YStack
+                p="$3"
+                borderRadius={12}
+                backgroundColor="$gray2"
+                borderWidth={1}
+                borderColor="$gray5"
+              >
+                <XStack jc="space-between" ai="center">
+                  <Text fontSize={16} fontWeight="600" color="$gray12">
+                    {t('manual.total', 'Total')}
+                  </Text>
+                  <Text fontSize={22} fontWeight="700" color="$primary">
+                    {grandTotal.toLocaleString()} {currency}
+                  </Text>
+                </XStack>
+              </YStack>
+
+              {/* Continue button */}
+              <Button
+                title={parsing ? t('common.loading', 'Loading...') : t('manual.continue', 'Continue')}
+                variant="primary"
+                size="large"
+                disabled={parsing}
+                onPress={handleContinue}
               />
             </YStack>
-
-            {/* Currency */}
-            <YStack gap="$2">
-              <Text fontSize={14} fontWeight="600">{t('manual.currency', 'Currency')}</Text>
-              <XStack gap="$2" flexWrap="wrap">
-                {CURRENCIES.map((c) => (
-                  <Button
-                    key={c}
-                    title={c}
-                    variant={c === currency ? 'primary' : 'outline'}
-                    size="small"
-                    onPress={() => setCurrency(c)}
-                  />
-                ))}
-              </XStack>
-            </YStack>
-
-            <Separator />
-
-            {/* Items */}
-            <YStack gap="$3">
-              <XStack jc="space-between" ai="center">
-                <Text fontSize={16} fontWeight="600">{t('manual.items', 'Items')}</Text>
-                <Button
-                  title={t('manual.addItem', 'Add item')}
-                  variant="outline"
-                  size="small"
-                  onPress={addItem}
-                />
-              </XStack>
-
-              {items.map((item, index) => (
-                <YStack
-                  key={item.localId}
-                  gap="$2"
-                  p="$3"
-                  borderWidth={1}
-                  borderColor="$gray5"
-                  borderRadius={12}
-                  backgroundColor="$backgroundPress"
-                >
-                  <XStack jc="space-between" ai="center">
-                    <Text fontSize={13} color="$gray10">#{index + 1}</Text>
-                    {items.length > 1 && (
-                      <XStack pressStyle={{ opacity: 0.6 }} onPress={() => removeItem(item.localId)}>
-                        <Trash2 size={18} color="$red10" />
-                      </XStack>
-                    )}
-                  </XStack>
-
-                  <TInput
-                    value={item.name}
-                    onChangeText={(v) => updateItem(item.localId, 'name', v)}
-                    placeholder={t('manual.itemName', 'Item name')}
-                    h={40}
-                    borderRadius={8}
-                  />
-
-                  <XStack gap="$2">
-                    <YStack f={1} gap="$1">
-                      <Text fontSize={12} color="$gray10">{t('manual.price', 'Price')}</Text>
-                      <TInput
-                        value={item.price}
-                        onChangeText={(v) => updateItem(item.localId, 'price', v)}
-                        placeholder="0"
-                        keyboardType="decimal-pad"
-                        h={40}
-                        borderRadius={8}
-                      />
-                    </YStack>
-                    <YStack w={80} gap="$1">
-                      <Text fontSize={12} color="$gray10">{t('manual.quantity', 'Qty')}</Text>
-                      <TInput
-                        value={item.quantity}
-                        onChangeText={(v) => updateItem(item.localId, 'quantity', v)}
-                        placeholder="1"
-                        keyboardType="number-pad"
-                        h={40}
-                        borderRadius={8}
-                        textAlign="center"
-                      />
-                    </YStack>
-                  </XStack>
-                </YStack>
-              ))}
-            </YStack>
-
-            <Separator />
-
-            {/* Total */}
-            <XStack jc="space-between" ai="center" px="$1">
-              <Text fontSize={16} fontWeight="600">{t('manual.total', 'Total')}</Text>
-              <Text fontSize={20} fontWeight="700" color="$primary">
-                {grandTotal.toLocaleString()} {currency}
-              </Text>
-            </XStack>
-
-            {/* Continue button */}
-            <Button
-              title={parsing ? t('common.loading', 'Loading...') : t('manual.continue', 'Continue')}
-              variant="primary"
-              size="large"
-              disabled={parsing}
-              onPress={handleContinue}
-            />
-          </YStack>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </YStack>
   );
 }

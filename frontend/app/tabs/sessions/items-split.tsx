@@ -759,7 +759,7 @@ export default function ItemsSplitScreen() {
       borderRadius={8}
       bg={active ? '$primary' : '$backgroundPress'}
       borderWidth={1}
-      borderColor={active ? '$primary' : '#E4E7EB'}
+      borderColor={active ? '$primary' : '$gray6'}
     >
       <XStack ai="center" gap="$2">
         {icon}
@@ -865,7 +865,7 @@ export default function ItemsSplitScreen() {
                   w="100%"
                   borderWidth={1}
                   borderColor={
-                    isCountAndMissing ? '#E74C3C' : assigned ? '$primary' : '#E4E7EB'
+                    isCountAndMissing ? '$red10' : assigned ? '$primary' : '$gray6'
                   }
                   borderRadius={12}
                   bg="$color1"
@@ -885,7 +885,7 @@ export default function ItemsSplitScreen() {
                         </XStack>
                       )}
                       {isCountAndMissing && (
-                        <Text fontSize={12} color="#E74C3C">
+                        <Text fontSize={12} color="$red10">
                           Assign remaining {missingUnits} unit{missingUnits === 1 ? '' : 's'}
                         </Text>
                       )}
@@ -911,7 +911,7 @@ export default function ItemsSplitScreen() {
                         borderRadius={assigned ? 5 : 6}
                         bg={assigned ? 'rgba(46,204,113,0.1)' : '$backgroundPress'}
                         borderWidth={assigned ? 0 : 1}
-                        borderColor={assigned ? 'transparent' : '#E4E7EB'}
+                        borderColor={assigned ? 'transparent' : '$gray6'}
                         ai="center"
                         jc="center"
                       >
@@ -1018,13 +1018,13 @@ export default function ItemsSplitScreen() {
               <XStack gap="$2" mb="$2">
                 <ModeToggleButton
                   label="Equal split"
-                  icon={<UsersIcon size={16} color={isEqualMode ? 'white' : '#2C3D4F'} />}
+                  icon={<UsersIcon size={16} color={isEqualMode ? 'white' : '$gray11'} />}
                   active={isEqualMode}
                   onPress={switchToEqual}
                 />
                 <ModeToggleButton
                   label="By units"
-                  icon={<PackageIcon size={16} color={isCountMode ? 'white' : '#2C3D4F'} />}
+                  icon={<PackageIcon size={16} color={isCountMode ? 'white' : '$gray11'} />}
                   active={isCountMode}
                   onPress={switchToCount}
                 />
@@ -1041,7 +1041,7 @@ export default function ItemsSplitScreen() {
                 </Button>
                 <Text color="$gray8">|</Text>
                 <Button chromeless onPress={modalClear}>
-                  <Text color="#E74C3C" fontWeight="700">
+                  <Text color="$red10" fontWeight="700">
                     Clear
                   </Text>
                 </Button>
@@ -1073,7 +1073,7 @@ export default function ItemsSplitScreen() {
                         jc="space-between"
                         px={16}
                         borderWidth={1}
-                        borderColor={isSelected ? '$primary' : '#E4E7EB'}
+                        borderColor={isSelected ? '$primary' : '$gray6'}
                         borderRadius={12}
                         bg="$color1"
                       >
@@ -1094,11 +1094,11 @@ export default function ItemsSplitScreen() {
                                 width={28}
                                 height={28}
                                 br={999}
-                                bg="#E4E7EB"
+                                bg="$gray6"
                                 ai="center"
                                 jc="center"
                               >
-                                <Minus size={16} color="#2C3D4F" />
+                                <Minus size={16} color="$gray11" />
                               </Button>
                               <Text minWidth={12} textAlign="center">
                                 {assignedQty}
@@ -1112,11 +1112,11 @@ export default function ItemsSplitScreen() {
                                 width={28}
                                 height={28}
                                 br={999}
-                                bg="#E4E7EB"
+                                bg="$gray6"
                                 ai="center"
                                 jc="center"
                               >
-                                <Plus size={16} color="#2C3D4F" />
+                                <Plus size={16} color="$gray11" />
                               </Button>
                             </XStack>
                           )}
@@ -1172,7 +1172,7 @@ export default function ItemsSplitScreen() {
                 height={41}
                 borderRadius={10}
                 borderWidth={1}
-                borderColor="#E4E7EB"
+                borderColor="$gray6"
                 ai="center"
                 jc="center"
               >

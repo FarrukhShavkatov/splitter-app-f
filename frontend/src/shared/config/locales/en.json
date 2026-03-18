@@ -221,6 +221,21 @@
     "empty": "No notifications yet",
     "markAllRead": "Mark all read"
   },
+  "scanner": {
+    "title": "Scan receipt",
+    "sessionName": "Session name",
+    "sessionNamePlaceholder": "e.g. Cafe on October",
+    "language": "Language",
+    "allowCamera": "Allow camera access",
+    "uploading": "Uploading receipt...",
+    "lastPhoto": "Last photo stored; capturing again will overwrite it.",
+    "scan": "Scan receipt",
+    "processing": "Processing...",
+    "useMock": "Use mock receipt",
+    "captureError": "Could not capture the receipt photo. Please try again.",
+    "prepareError": "Failed to prepare the receipt photo for upload.",
+    "genericError": "Something went wrong while sending the receipt"
+  },
   "manual": {
     "sessionName": "Bill name",
     "sessionNamePlaceholder": "e.g. Dinner at cafe",

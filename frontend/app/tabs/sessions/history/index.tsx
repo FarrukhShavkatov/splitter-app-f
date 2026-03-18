@@ -52,7 +52,7 @@ function AvatarGroup({ participants }: { participants: SessionHistoryParticipant
           w={28}
           h={28}
           br={14}
-          backgroundColor="#CBD5F5"
+          backgroundColor="$gray5"
           borderWidth={2}
           borderColor="$background"
           ml={shown.length === 0 ? 0 : -8}
@@ -88,7 +88,7 @@ function HistoryCard({
         h={110}
         br={12}
         borderWidth={1}
-        borderColor="#E4E7EB"
+        borderColor="$gray6"
         p="$3"
         backgroundColor="$background"
       >

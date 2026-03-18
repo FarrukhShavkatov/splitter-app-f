@@ -188,6 +188,21 @@
     "empty": "通知はまだありません",
     "markAllRead": "すべて既読にする"
   },
+  "scanner": {
+    "title": "レシートをスキャン",
+    "sessionName": "セッション名",
+    "sessionNamePlaceholder": "例: 10月のカフェ",
+    "language": "言語",
+    "allowCamera": "カメラへのアクセスを許可してください",
+    "uploading": "レシートをアップロード中...",
+    "lastPhoto": "前回の写真が保存されています。再撮影すると上書きされます。",
+    "scan": "レシートをスキャン",
+    "processing": "処理中...",
+    "useMock": "サンプルレシートを使用",
+    "captureError": "レシートの撮影に失敗しました。もう一度お試しください。",
+    "prepareError": "レシート画像のアップロード準備に失敗しました。",
+    "genericError": "レシートの送信中にエラーが発生しました"
+  },
   "manual": {
     "sessionName": "明細名",
     "sessionNamePlaceholder": "例: カフェでの夕食",

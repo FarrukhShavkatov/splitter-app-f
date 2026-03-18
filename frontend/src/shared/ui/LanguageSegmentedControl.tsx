@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, LayoutChangeEvent, Pressable } from 'react-native';
-import { XStack, Text, View } from 'tamagui';
+import { XStack, Text, View, useTheme } from 'tamagui';
 import { LANGUAGE_OPTIONS, type LanguageCode } from '@/shared/config/languages';
 
 interface LanguageSegmentedControlProps {
@@ -15,6 +15,7 @@ export function LanguageSegmentedControl({
   onChange,
   getLabel,
 }: LanguageSegmentedControlProps) {
+  const theme = useTheme();
   const options = LANGUAGE_OPTIONS;
   const selectedIndex = Math.max(0, options.findIndex((o) => o.code === value));
 
@@ -68,11 +69,10 @@ export function LanguageSegmentedControl({
               height,
               width: segmentWidth,
               borderRadius: 999,
-              backgroundColor: '#ffffff',
+              backgroundColor: theme.background?.val ?? '#ffffff',
               transform: [{ translateX: thumbAnim }],
-              // тонкая рамка и тень для объёма
               borderWidth: 1,
-              borderColor: '#D4D4D8',
+              borderColor: theme.borderColor?.val ?? '#D4D4D8',
               shadowColor: '#000',
               shadowOpacity: 0.06,
               shadowRadius: 8,

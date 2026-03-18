@@ -69,7 +69,7 @@ export function Input({
           borderRadius="$4"
           borderWidth={1}
           borderColor={error ? '$red8' : '$gray7'}
-          backgroundColor="$white1"
+          backgroundColor="$background"
           height="$4"
           fontSize="$4"
           focusStyle={{ borderColor: error ? '$red8' : '$green9' }}

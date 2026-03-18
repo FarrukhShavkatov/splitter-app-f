@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { YStack, XStack, Button, Paragraph, Input, Text, Spinner } from 'tamagui';
 import { ChevronLeft, AlertTriangle, Camera as CameraIcon } from '@tamagui/lucide-icons';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { useTranslation } from 'react-i18next';
 
 import {
   useReceiptSessionStore,
@@ -31,6 +32,7 @@ function guessMime(uri?: string): string {
 }
 
 export default function ScanReceiptScreen() {
+  const { t } = useTranslation();
   const [perm, requestPerm] = useCameraPermissions();
   const isFocused = useIsFocused();
   const router = useRouter();
@@ -89,7 +91,7 @@ export default function ScanReceiptScreen() {
       });
 
       if (!picture?.uri) {
-        throw new Error('Could not capture the receipt photo. Please try again.');
+        throw new Error(t('scanner.captureError'));
       }
 
       const targetWidth = picture.width ? Math.min(picture.width, 1280) : undefined;
@@ -100,7 +102,7 @@ export default function ScanReceiptScreen() {
       );
 
       if (!manipResult?.base64) {
-        throw new Error('Failed to prepare the receipt photo for upload.');
+        throw new Error(t('scanner.prepareError'));
       }
 
       const base64SizeKb = (manipResult.base64.length * 3) / 4 / 1024;
@@ -131,7 +133,7 @@ export default function ScanReceiptScreen() {
 
       router.push('/tabs/sessions/participants');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Something went wrong while sending the receipt';
+      const message = error instanceof Error ? error.message : t('scanner.genericError');
       setLocalError(message);
     }
   }, [cameraRef, parsing, sessionName, setSessionNameStore, setCapture, parseReceipt, language, router]);
@@ -167,9 +169,9 @@ export default function ScanReceiptScreen() {
             icon={<ChevronLeft size={18} color="white" />}
             color="white"
           >
-            Back
+            {t('common.back')}
           </Button>
-          <Paragraph fow="700" fos="$6" col="white">Scan receipt</Paragraph>
+          <Paragraph fow="700" fos="$6" col="white">{t('scanner.title')}</Paragraph>
           <YStack w={54} />
         </XStack>
       </View>
@@ -183,14 +185,14 @@ export default function ScanReceiptScreen() {
           />
         ) : (
           <YStack f={1} ai="center" jc="center">
-            {!perm ? <ActivityIndicator color="white" /> : <Paragraph col="$gray1">Allow camera access</Paragraph>}
+            {!perm ? <ActivityIndicator color="white" /> : <Paragraph col="white">{t('scanner.allowCamera')}</Paragraph>}
           </YStack>
         )}
 
         {parsing && (
           <View style={S.overlay}>
             <Spinner size="large" color="white" />
-            <Paragraph mt="$2" col="white">Uploading receipt...</Paragraph>
+            <Paragraph mt="$2" col="white">{t('scanner.uploading')}</Paragraph>
           </View>
         )}
       </View>
@@ -198,13 +200,13 @@ export default function ScanReceiptScreen() {
       <View style={S.actions}>
         <YStack gap="$3">
           <YStack gap={8}>
-            <Paragraph color="$gray1" fontSize={12}>
-              Session name
+            <Paragraph color="white" fontSize={12}>
+              {t('scanner.sessionName')}
             </Paragraph>
             <Input
               value={sessionName}
               onChangeText={handleSessionNameChange}
-              placeholder="e.g. Cafe on October"
+              placeholder={t('scanner.sessionNamePlaceholder')}
               height={41}
               borderRadius={10}
               px={16}
@@ -215,15 +217,15 @@ export default function ScanReceiptScreen() {
             />
           </YStack>
 
-          <Paragraph color="$gray1" fontSize={12}>
-            language: <Text fontWeight="700" color="white">{language}</Text>
+          <Paragraph color="white" fontSize={12}>
+            {t('scanner.language')}: <Text fontWeight="700" color="white">{language}</Text>
           </Paragraph>
 
           {storedCapture?.uri && (
             <XStack ai="center" gap="$2">
               <Image source={{ uri: storedCapture.uri }} style={S.preview} resizeMode="cover" />
-              <Paragraph color="$gray1" fontSize={12}>
-                Last photo stored; capturing again will overwrite it.
+              <Paragraph color="white" fontSize={12}>
+                {t('scanner.lastPhoto')}
               </Paragraph>
             </XStack>
           )}
@@ -244,7 +246,7 @@ export default function ScanReceiptScreen() {
               disabled={parsing}
               opacity={parsing ? 0.6 : 1}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               size="$3"
@@ -254,12 +256,12 @@ export default function ScanReceiptScreen() {
               disabled={disableAction}
               icon={parsing ? undefined : <CameraIcon size={18} color="white" />}
             >
-              {parsing ? 'Processing...' : 'Scan receipt'}
+              {parsing ? t('scanner.processing') : t('scanner.scan')}
             </Button>
           </XStack>
 
           <Button size="$2" borderRadius="$3" theme="gray" variant="outlined" onPress={useMock} disabled={parsing}>
-            Use mock receipt
+            {t('scanner.useMock')}
           </Button>
         </YStack>
       </View>

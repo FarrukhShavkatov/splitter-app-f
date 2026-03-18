@@ -1,4 +1,4 @@
-﻿// app/tabs/scan-invite.tsx
+// app/tabs/scan-invite.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View, Image, Animated, Modal } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
@@ -314,7 +314,7 @@ const S = StyleSheet.create({
     borderColor: '#2ECC71',
   },
   avatarPlaceholder: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#e0e0e0',
     justifyContent: 'center',
     alignItems: 'center',
   },
