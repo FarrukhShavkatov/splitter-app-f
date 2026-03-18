@@ -74,7 +74,7 @@ function GlobalTabsHeader(props: any) {
   return (
     <YStack bg="$background" pt={insets.top}>
       <XStack h={50} ai="center" jc="space-between" px="$4">
-        <XStack ai="center" gap="$2">
+        <XStack ai="center" gap="$2" f={1} flexShrink={1}>
           {showHomeShortcut && (
             <Pressable onPress={onBackToHome} hitSlop={10}>
               <XStack ai="center" gap="$1">
@@ -85,12 +85,12 @@ function GlobalTabsHeader(props: any) {
               </XStack>
             </Pressable>
           )}
-          <Text fontSize={18} fontWeight="600" numberOfLines={1} miw={150}>
+          <Text fontSize={18} fontWeight="600" numberOfLines={1} flexShrink={1}>
             {props.options.title}
           </Text>
         </XStack>
 
-        <XStack ai="center" gap="$3">
+        <XStack ai="center" gap="$3" flexShrink={0}>
           <Pressable onPress={toggleTheme} hitSlop={8}>
             {isDark
               ? <Sun size={22} color="$gray11" />
@@ -124,8 +124,7 @@ export default function TabLayout() {
     return () => clearInterval(interval);
   }, []);
 
-  const greetingName = user?.username || t('home.header.friendFallback', 'friend');
-  const homeTitle = t('home.header.greeting', { name: greetingName });
+  const homeTitle = user?.username || t('navigation.tabs.home', 'Home');
   const homeLabel = t('navigation.tabs.home', 'Home');
   const settingsTitle = t('navigation.tabs.settings', 'Settings');
   const profileTitle = t('profile.title', 'Profile');
