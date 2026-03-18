@@ -120,6 +120,12 @@ router.post("/register", async (req, res) => {
         .status(400)
         .json({ error: "Please provide email, password, and username" });
     }
+
+    if (cleanUsername.length < 2 || cleanUsername.length > 15) {
+      return res
+        .status(400)
+        .json({ error: "Username must be 2-15 characters" });
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(cleanEmail)) {
       return res.status(400).json({ error: "Invalid email format" });

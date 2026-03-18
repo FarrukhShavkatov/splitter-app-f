@@ -41,6 +41,7 @@ export default function SettingsScreen() {
     const trimmed = value.trim();
     if (!trimmed) return 'Username cannot be empty';
     if (trimmed.length < 2) return 'Username must be at least 2 characters';
+    if (trimmed.length > 15) return 'Username must be at most 15 characters';
     return null;
   };
 

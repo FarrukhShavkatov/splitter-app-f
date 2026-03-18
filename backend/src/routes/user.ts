@@ -163,10 +163,10 @@ router.patch(
         return res.status(400).json({ error: "Username must be a string" });
       }
       const clean = username.trim();
-      if (!clean || clean.length < 2 || clean.length > 32) {
+      if (!clean || clean.length < 2 || clean.length > 15) {
         return res
           .status(400)
-          .json({ error: "Username must be 2-32 characters" });
+          .json({ error: "Username must be 2-15 characters" });
       }
 
       const updated = await prisma.user

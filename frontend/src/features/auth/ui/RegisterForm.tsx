@@ -23,7 +23,7 @@ const ACCOUNT_EXISTS_PATTERN =
   /(already exists|already registered|duplicate|taken|conflict|user exists|email exists|username exists)/i;
 
 const schema = z.object({
-  username: z.string().min(2, 'Username must be at least 2 characters'),
+  username: z.string().min(2, 'Username must be at least 2 characters').max(15, 'Username must be at most 15 characters'),
   email: z.string().email('Please enter a valid email'),
   password: z.string().refine((value) => {
     if (value.length < 8) return false;

@@ -370,6 +370,7 @@ export default function ProfileScreen() {
       const trimmed = value.trim();
       if (!trimmed) return t('profile.validation.usernameRequired', 'Username cannot be empty');
       if (trimmed.length < 2) return t('profile.validation.usernameMin', 'Username must be at least 2 characters');
+      if (trimmed.length > 15) return t('profile.validation.usernameMax', 'Username must be at most 15 characters');
       return null;
     },
     [t]
