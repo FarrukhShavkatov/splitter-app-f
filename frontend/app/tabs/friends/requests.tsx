@@ -12,7 +12,6 @@ import {
 import { useRouter } from 'expo-router';
 import { CircleCheck, CircleX, QrCode, Scan } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
-
 import { useFriendsStore } from '@/features/friends/model/friends.store';
 import UserAvatar from '@/shared/ui/UserAvatar';
 import { FriendsApi } from '@/features/friends/api/friends.api';

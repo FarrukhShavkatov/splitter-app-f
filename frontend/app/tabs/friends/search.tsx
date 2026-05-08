@@ -10,7 +10,6 @@ import {
   Spinner,
 } from 'tamagui';
 import { useTranslation } from 'react-i18next';
-
 import { useFriendsStore } from '@/features/friends/model/friends.store';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 
@@ -51,7 +50,6 @@ export default function FriendsSearchScreen() {
   const { search, send, requestsRaw, friends } = useFriendsStore();
   const meUniqueId = useAppStore((s) => s.user?.uniqueId);
   const { t } = useTranslation();
-
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<UserLite[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
@@ -84,6 +82,7 @@ export default function FriendsSearchScreen() {
       const uid = request?.to?.uniqueId ?? request?.toUniqueId ?? request?.uniqueId;
       if (uid) set.add(uid);
     });
+
     return set;
   }, [requestsRaw?.outgoing]);
 
@@ -93,6 +92,7 @@ export default function FriendsSearchScreen() {
       const uid = request?.from?.uniqueId ?? request?.fromUniqueId ?? request?.uniqueId;
       if (uid) set.add(uid);
     });
+
     return set;
   }, [requestsRaw?.incoming]);
 
@@ -102,6 +102,7 @@ export default function FriendsSearchScreen() {
       const uid = friend?.user?.uniqueId ?? friend?.uniqueId;
       if (uid) set.add(uid);
     });
+    
     return set;
   }, [friends]);
 

@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { Pressable, RefreshControl } from 'react-native';
 import { YStack, XStack, Text, ScrollView, View } from 'tamagui';
 import { useTranslation } from 'react-i18next';
-
 import UserAvatar from '@/shared/ui/UserAvatar';
 import { useSessionsHistoryStore } from '@/features/sessions/model/history.store';
 import type { SessionHistoryEntry, SessionHistoryParticipantLight } from '@/features/sessions/api/history.api';
@@ -114,6 +113,7 @@ function HistoryCard({
   );
 }
 
+// рекурсия в истории цеков
 export default function SessionsHistoryScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();

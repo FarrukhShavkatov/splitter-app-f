@@ -1,6 +1,6 @@
 // src/application/providers/TamaguiProvider.tsx
 import React from 'react'
-import { useColorScheme } from 'react-native'
+import { useColorScheme } from 'react-native'  // dark-mode colors
 import { TamaguiProvider as Provider } from '@tamagui/core'
 import { PortalProvider } from '@tamagui/portal'
 import { useFonts } from 'expo-font'

@@ -4,7 +4,6 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
 import { YStack, Text, Separator, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-
 import { Button } from '@/shared/ui/Button';
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
 import Input from '@/shared/ui/Input';
@@ -17,11 +16,9 @@ export default function SettingsScreen() {
   const { user, setUser, language, setLanguage } = useAppStore();
   const { t } = useTranslation();
   const isLoggedIn = !!user;
-
   const [usernameValue, setUsernameValue] = useState(user?.username ?? '');
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isUpdatingUsername, setIsUpdatingUsername] = useState(false);
-
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

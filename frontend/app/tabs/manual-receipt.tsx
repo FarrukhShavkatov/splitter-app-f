@@ -5,10 +5,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Plus, Trash2 } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
-
 import { Button } from '@/shared/ui/Button';
 import { useReceiptSessionStore } from '@/features/receipt/model/receipt-session.store';
 
+// ручной ввод чека
 interface ManualItem {
   localId: string;
   name: string;
@@ -17,7 +17,6 @@ interface ManualItem {
 }
 
 const makeId = () => `m-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-
 const CURRENCIES = ['UZS', 'USD', 'EUR', 'RUB', 'JPY'];
 
 export default function ManualReceiptScreen() {
@@ -25,25 +24,20 @@ export default function ManualReceiptScreen() {
   const router = useRouter();
   const createManualSession = useReceiptSessionStore((s) => s.createManualSession);
   const parsing = useReceiptSessionStore((s) => s.parsing);
-
   const [sessionName, setSessionName] = useState('');
   const [currency, setCurrency] = useState('UZS');
   const [items, setItems] = useState<ManualItem[]>([
     { localId: makeId(), name: '', price: '', quantity: '1' },
   ]);
-
   const addItem = useCallback(() => {
     setItems((prev) => [...prev, { localId: makeId(), name: '', price: '', quantity: '1' }]);
   }, []);
-
   const removeItem = useCallback((id: string) => {
     setItems((prev) => (prev.length <= 1 ? prev : prev.filter((i) => i.localId !== id)));
   }, []);
-
   const updateItem = useCallback((id: string, field: keyof ManualItem, value: string) => {
     setItems((prev) => prev.map((i) => (i.localId === id ? { ...i, [field]: value } : i)));
   }, []);
-
   const grandTotal = useMemo(() => {
     return items.reduce((sum, item) => {
       const price = parseFloat(item.price) || 0;
@@ -51,7 +45,6 @@ export default function ManualReceiptScreen() {
       return sum + price * qty;
     }, 0);
   }, [items]);
-
   const handleContinue = useCallback(async () => {
     const name = sessionName.trim() || t('manual.defaultName', 'Manual bill');
     const validItems = items.filter((i) => i.name.trim() && parseFloat(i.price) > 0);
@@ -59,7 +52,6 @@ export default function ManualReceiptScreen() {
       Alert.alert(t('common.error', 'Error'), t('manual.noItems', 'Add at least one item with a name and price.'));
       return;
     }
-
     const storeItems = validItems.map((i) => ({
       id: i.localId,
       name: i.name.trim(),

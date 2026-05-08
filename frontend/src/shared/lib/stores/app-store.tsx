@@ -14,6 +14,7 @@ export interface User {
   avatarUrl: string | null;
 }
 
+// dark-mode
 interface AppStore {
   // Auth state
   token: string | null;

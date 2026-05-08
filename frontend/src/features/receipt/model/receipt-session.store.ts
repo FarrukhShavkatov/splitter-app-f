@@ -168,6 +168,7 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
     }
   },
 
+  // ручной ввод чека
   createManualSession: async (sessionName, currency, rawItems) => {
     set({ parsing: true, parseError: undefined });
     try {

@@ -14,6 +14,7 @@ const router = Router();
 // FIX: Было "#" + Math.floor(1000 + Math.random() * 9000) → всего 9000 вариантов.
 // При ~1000 пользователях вероятность коллизии около 5% (задача о днях рождения).
 // Теперь 8-символьный hex (4 байта) = 4 294 967 296 вариантов + crypto вместо Math.random().
+// было логирование паролей в открытом виде, теперь нет
 function generateUniqueId() {
   return "#" + crypto.randomBytes(4).toString("hex").toUpperCase();
 }
