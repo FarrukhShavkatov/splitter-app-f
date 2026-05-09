@@ -13,32 +13,30 @@ import usersRoutes from "./routes/users.js";
 import uploadsRoutes from "./routes/uploads.js";
 import { logAuthAttempts } from "./middleware/logAuth.js";
 import debugRoutes from "./routes/debug.js";
+import { validateBackendEnv } from "./config/env.js";
 
-// Load .env
+// Load backend/.env for local npm development. Docker Compose injects the same
+// variables through its environment block.
 dotenv.config();
 
-// FIX: без этой проверки сервер стартовал с пустым JWT_SECRET (или слишком коротким)
-// что позволяло подписывать/верифицировать JWT пустой строкой — фактически без защиты
-// Теперь сервер не запустится, пока секрет не будет задан корректно.
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 16) {
-  console.error("FATAL: JWT_SECRET must be set and at least 16 characters");
+let env;
+try {
+  env = validateBackendEnv();
+} catch (error) {
+  console.error("FATAL: invalid backend environment.");
+  console.error(error instanceof Error ? error.message : error);
   process.exit(1);
 }
 
 const app = express();
 // Allow configurable JSON body size (large base64 images for /sessions/scan)
 // Default increased from Express ~100kb to 4mb to fit ~3MB binary image (base64 expands ~33%).
-const JSON_LIMIT = process.env.JSON_BODY_LIMIT || "4mb";
+const JSON_LIMIT = env.jsonBodyLimit;
 app.use(express.json({ limit: JSON_LIMIT }));
 
 // Configure CORS with long preflight caching and multiple origins support
-const rawCorsOrigins = (process.env.CORS_ORIGINS || "").trim();
-const allowAllCors =
-  rawCorsOrigins === "*" || process.env.ALLOW_ALL_CORS === "1";
-const allowlist = rawCorsOrigins
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
+const allowAllCors = env.allowAllCors;
+const allowlist = env.corsOrigins;
 
 if (allowAllCors) {
   // Temporary relaxed policy: allow all origins. Note: credentials must be false with '*'.
@@ -68,7 +66,7 @@ if (allowAllCors) {
       // In non-production allow all origins (reflecting origin)
       if (process.env.NODE_ENV !== "production") return callback(null, true);
 
-      // In production – only those in the allowlist
+      // In production, only explicitly configured origins are allowed.
       if (allowlist.includes(origin)) return callback(null, true);
 
       console.warn(`CORS blocked request from: ${origin}`);
@@ -105,9 +103,11 @@ app.get("/health", (req, res) => {
 app.use(errorHandler);
 
 // Start server
-const PORT = process.env.PORT || 3001;
+const PORT = env.port;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`Swagger docs: http://localhost:${PORT}/api-docs`);
   console.log(
     "CORS allowlist:",
     allowAllCors
@@ -118,8 +118,6 @@ app.listen(PORT, () => {
   );
 });
 
-// FIX: раньше блок "DEBUG ENV" выполнялся всегда, включая production
-// Перенесён под проверку NODE_ENV, чтобы не светить переменные окружения в prod-логах
 if (process.env.NODE_ENV !== "production") {
   console.log("ENV check:", {
     PORT: process.env.PORT,

@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { getToken } from '@/shared/lib/utils/token-storage';
 import { emitUnauthorized } from '@/shared/api/auth-events';
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+import { API_URL } from '@/shared/config/env';
 
 export class ApiError extends Error {
   status?: number;

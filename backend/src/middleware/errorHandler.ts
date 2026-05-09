@@ -21,9 +21,8 @@ export function errorHandler(
     console.error("Unhandled error:", err);
   }
 
-  // FIX: раньше rawMessage (внутреннее сообщение ошибки, включая SQL-запросы, пути файлов,
-  // стек Prisma и т.д.) отправлялся клиенту as-is при статусе 500.
-  // Теперь в production все 5xx ошибки маскируются стандартным сообщением.
+  // Do not leak internal details (SQL, file paths, Prisma messages) to clients
+  // when the app runs in production.
   const message =
     status >= 500 && process.env.NODE_ENV === "production"
       ? "Internal Server Error"

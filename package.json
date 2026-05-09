@@ -1,0 +1,26 @@
+{
+  "name": "receipt-splitter-starter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Beginner-friendly monorepo starter for Receipt Splitter: Expo frontend, Express backend, PostgreSQL and Prisma.",
+  "scripts": {
+    "doctor": "node scripts/doctor.cjs",
+    "check-env": "node scripts/check-env.cjs",
+    "ip": "node scripts/print-ip.cjs",
+    "setup": "npm --prefix backend install && npm --prefix frontend install",
+    "backend:dev": "npm --prefix backend run dev",
+    "backend:build": "npm --prefix backend run build",
+    "backend:docker": "docker compose -f backend/docker-compose.yml up --build",
+    "backend:docker:detached": "docker compose -f backend/docker-compose.yml up --build -d",
+    "backend:logs": "docker compose -f backend/docker-compose.yml logs -f splitter-backend",
+    "backend:stop": "docker compose -f backend/docker-compose.yml down",
+    "db:migrate": "npm --prefix backend run db:migrate",
+    "db:studio": "npm --prefix backend run db:studio",
+    "frontend:dev": "npm --prefix frontend run start",
+    "frontend:start:clean": "npm --prefix frontend run start:clean",
+    "frontend:web": "npm --prefix frontend run web"
+  },
+  "engines": {
+    "node": ">=18 <=20"
+  }
+}

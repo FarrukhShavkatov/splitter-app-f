@@ -6,9 +6,8 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      // removed deprecated 'expo-router/babel' (use 'babel-preset-expo' in SDK 50+)
-      // Отключаем Tamagui babel plugin для production сборки
-      // Это уберет оптимизацию, но решит проблему со сборкой
+      // expo-router/babel is deprecated in recent Expo SDKs; babel-preset-expo handles it.
+      // Tamagui extraction is kept only in dev because production extraction was unstable here.
       ...(!isProduction ? [
         [
           '@tamagui/babel-plugin',
@@ -30,7 +29,7 @@ module.exports = function (api) {
           extensions: ['.ts', '.tsx', '.js', '.jsx', '.json']
         }
       ],
-      'react-native-reanimated/plugin' // должен быть последним
+      'react-native-reanimated/plugin' // Must stay last.
     ]
   };
 };

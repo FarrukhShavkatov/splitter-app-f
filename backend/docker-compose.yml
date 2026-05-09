@@ -1,20 +1,18 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:15
-    container_name: postgres
-    restart: always
+    container_name: splitter-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: supersecret
-      POSTGRES_DB: mydb
+      POSTGRES_DB: splitter
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d mydb -h localhost"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -h localhost"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -25,18 +23,23 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: splitter-backend
-    restart: always
-    env_file:
-      - .env
+    restart: unless-stopped
     environment:
-      PORT: "8080"
-      DATABASE_URL: "postgresql://admin:supersecret@postgres:5432/mydb?schema=public"
-      NODE_ENV: "production"
+      # These defaults are intentionally beginner-friendly for local Docker.
+      # Keep PORT and DATABASE_URL fixed here so an old backend/.env cannot
+      # accidentally break the Docker path for students.
+      PORT: 8080
+      NODE_ENV: production
+      DATABASE_URL: postgresql://admin:supersecret@postgres:5432/splitter?schema=public
+      JWT_SECRET: student_dev_jwt_secret_change_me
+      ALLOW_ALL_CORS: 1
+      JSON_BODY_LIMIT: 4mb
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT:-8080}:8080"
+    command: sh -c "npx prisma migrate deploy && node dist/server.js"
 
 volumes:
   postgres_data:

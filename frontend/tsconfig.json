@@ -3,9 +3,9 @@
   "compilerOptions": {
     "strict": true,
     "skipLibCheck": true,
-    "moduleResolution": "bundler",  // или "node16"
+    "moduleResolution": "bundler",
     "paths": {
-      "@/*": ["./src/*"]  // Используйте полный путь без baseUrl
+      "@/*": ["./src/*"]
     }
   },
   "include": [
