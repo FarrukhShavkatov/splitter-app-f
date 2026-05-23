@@ -8,7 +8,16 @@ cp .env.example .env
 
 In frontend .env write your ip like this
 EXPO_PUBLIC_API_URL=http://writeYourIP:8080
-change your ip every time when you connect to wifi
+change your ip every time when you connect to 
+
+run print-ip scripts to know your ip
+```
+npm run ip
+```
+or
+```
+node print-ip.cjs
+```
 
 In frontend directory install npm packages with
 ```

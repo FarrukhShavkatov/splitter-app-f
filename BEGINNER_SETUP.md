@@ -45,7 +45,7 @@ cd splitter-app-f
 ## 3. Проверьте проект
 
 ```bash
-npm run doctor
+node doctor.cjs
 ```
 
 Doctor проверит Node.js, npm, Docker и env-файлы.
@@ -171,7 +171,7 @@ EXPO_PUBLIC_API_URL=http://192.168.1.23:8080
 ## 10. Проверьте env
 
 ```bash
-npm run check-env
+node check-env.cjs
 ```
 
 Если видите warning про localhost, это нормально только для web/emulator. Для телефона используйте LAN IP.
@@ -230,7 +230,7 @@ npm run backend:stop
 ## 15. Мини-чеклист перед сдачей
 
 ```bash
-npm run check-env
+node check-env.cjs
 curl http://localhost:8080/health
 npm run frontend:dev
 ```
