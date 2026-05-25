@@ -5,6 +5,7 @@ import { Check } from '@tamagui/lucide-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { FinalizeTotalsByItem, FinalizeTotalsByParticipant, ReceiptAllocation } from '@/features/receipt/api/receipt.api';
 import { useReceiptSessionStore, type FinishPayload } from '@/features/receipt/model/receipt-session.store';
+import { useTranslation } from 'react-i18next';
 
 type Participant = { uniqueId: string; username: string };
 
@@ -33,6 +34,7 @@ const getCurrencyParts = (n: number, currency: string) => {
 };
 
 export default function FinishScreen() {
+  const { t } = useTranslation();
   const { data } = useLocalSearchParams<{ data?: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -425,12 +427,12 @@ export default function FinishScreen() {
       <YStack bg="$background" p="$4" pb="$2">
         <XStack w="100%" ai="center" jc="flex-start" mb="$3">
           <YStack ai="flex-start">
-            <Text fontSize={16} fontWeight="700">
-              Bill Summary
+            <Text fontSize={16} fontWeight="700" color="$color">
+              {t('sessions.finish.title', 'Bill Summary')}
             </Text>
             {receiptId && (
               <Text fontSize={12} color="$gray10">
-                Receipt #{receiptId}
+                {t('sessions.finish.receipt', { id: receiptId, defaultValue: 'Receipt #{{id}}' })}
               </Text>
             )}
           </YStack>
@@ -475,7 +477,7 @@ export default function FinishScreen() {
             mb="$3"
           >
             <Text fontSize={13} color="$gray11" mb="$1">
-              Total Amount
+              {t('sessions.finish.totalAmount', 'Total Amount')}
             </Text>
             <XStack ai="baseline" gap="$1">
               <Text fontSize={14} color="$primary">
@@ -497,7 +499,7 @@ export default function FinishScreen() {
       >
         <YStack gap="$2">
           <Text fontSize={14} fontWeight="600" color="$gray11" mb="$1">
-            Split by participant:
+            {t('sessions.finish.splitBy', 'Split by participant:')}
           </Text>
           {participantSummaries.length > 0 ? (
             participantSummaries.map((summary) => {
@@ -518,7 +520,7 @@ export default function FinishScreen() {
                 >
                   <XStack ai="center" gap="$3">
                     <Avatar name={summary.username} />
-                    <Text fontWeight="600" fontSize={15}>
+                    <Text fontWeight="600" fontSize={15} color="$color">
                       {summary.username}
                     </Text>
                   </XStack>
@@ -543,7 +545,7 @@ export default function FinishScreen() {
         {itemSummaries.length > 0 && (
           <YStack gap="$2" mt="$4">
             <Text fontSize={14} fontWeight="600" color="$gray11" mb="$1">
-              Split by item:
+              {t('sessions.finish.splitByItems', 'Split by items:')}
             </Text>
             {itemSummaries.map((item) => {
               const itemParts = getCurrencyParts(item.total, currency);
@@ -558,7 +560,7 @@ export default function FinishScreen() {
                   gap="$2"
                 >
                   <XStack w="100%" ai="center" jc="space-between">
-                    <Text fontWeight="600" fontSize={15}>
+                    <Text fontWeight="600" fontSize={15} color="$color">
                       {item.name}
                     </Text>
                     <XStack ai="baseline" gap="$1">
@@ -598,7 +600,7 @@ export default function FinishScreen() {
                     </YStack>
                   ) : (
                     <Text fontSize={12} color="$gray9">
-                      No allocation details available.
+                      {t('sessions.finish.noAllocation', 'No allocation details available.')}
                     </Text>
                   )}
                 </YStack>
@@ -626,7 +628,7 @@ export default function FinishScreen() {
           pressStyle={{ opacity: 0.9 }}
         >
           <Text fontSize={16} fontWeight="600" color="white">
-            Complete settlement
+            {t('sessions.finish.complete', 'Complete settlement')}
           </Text>
         </Button>
       </YStack>

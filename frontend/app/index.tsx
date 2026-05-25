@@ -83,7 +83,7 @@ export default function Welcome() {
             </Circle>
             
             <YStack alignItems="center" gap="$3">
-              <Text fontSize="$9" fontWeight="900" color="$gray12" textAlign="center">
+              <Text fontSize="$9" fontWeight="900" color="$color" textAlign="center">
                 {t('app.name', 'Receipt Splitter')}
               </Text>
               <Text fontSize="$5" color="$gray10" textAlign="center" maxWidth={280}>
@@ -123,7 +123,7 @@ export default function Welcome() {
           
           {/* Primary CTA */}
           <YStack alignItems="center" gap="$4">
-            <Text fontSize="$6" fontWeight="700" textAlign="center" color="$gray12">
+            <Text fontSize="$6" fontWeight="700" textAlign="center" color="$color">
               {t('welcome.message', 'Welcome! Let\'s get started')}
             </Text>
             

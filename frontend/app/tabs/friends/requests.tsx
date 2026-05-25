@@ -331,7 +331,7 @@ export default function FriendsRequestsUnified() {
   );
 
   return (
-    <YStack f={1} p="$4" gap="$4">
+    <YStack f={1} p="$4" gap="$4" bg="$background">
       {notice.node}
       {error && <Paragraph col="$red10">{error}</Paragraph>}
 

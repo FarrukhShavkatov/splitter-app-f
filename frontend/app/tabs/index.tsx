@@ -57,7 +57,7 @@ function ActionButton({
       focusStyle={{ borderColor: '$gray7' }}
     >
       {icon}
-      <Text fontSize={14}>{title}</Text>
+      <Text fontSize={14} color="$color">{title}</Text>
     </XStack>
   );
 }
@@ -132,7 +132,7 @@ function BillCard({
       >
         <XStack jc="space-between" ai="center">
           <YStack>
-            <Text fontSize={16} fontWeight="600" lineHeight={19}>
+            <Text fontSize={16} fontWeight="600" lineHeight={19} color="$color">
               {title}
             </Text>
             <Text mt="$1" fontSize={12} lineHeight={12} color="$gray10">
@@ -236,7 +236,7 @@ export default function HomePage() {
         </XStack>
 
         <XStack w={358} jc="space-between" ai="center" mb="$3">
-          <Text fontSize={18} fontWeight="600">
+          <Text fontSize={18} fontWeight="600" color="$color">
             {t('home.recent.title', 'Recent bills')}
           </Text>
 

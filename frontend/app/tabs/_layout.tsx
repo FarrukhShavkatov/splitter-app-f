@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect } from 'react';
 import { Tabs, useRouter } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Pressable, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { YStack, XStack, Text, View } from 'tamagui';
 import { Home, Settings, Bell, ChevronLeft, Sun, Moon } from '@tamagui/lucide-icons';
@@ -59,7 +59,11 @@ function GlobalTabsHeader(props: any) {
 
   const currentTheme = useAppStore((s) => s.theme);
   const setTheme = useAppStore((s) => s.setTheme);
-  const isDark = currentTheme === 'dark';
+  const systemScheme = useColorScheme();
+  const isDark =
+    currentTheme === 'system'
+      ? systemScheme === 'dark'
+      : currentTheme === 'dark';
   const toggleTheme = useCallback(() => {
     setTheme(isDark ? 'light' : 'dark');
   }, [isDark, setTheme]);
@@ -85,7 +89,7 @@ function GlobalTabsHeader(props: any) {
               </XStack>
             </Pressable>
           )}
-          <Text fontSize={18} fontWeight="600" numberOfLines={1} flexShrink={1}>
+          <Text fontSize={18} fontWeight="600" numberOfLines={1} flexShrink={1} color="$color">
             {props.options.title}
           </Text>
         </XStack>
@@ -178,7 +182,7 @@ export default function TabLayout() {
 
       {/* Friends stack (hidden) */}
       <Tabs.Screen name="friends/index" options={{ href: null, title: t('friends.title', 'Friends') }} />
-      <Tabs.Screen name="friends/search" options={{ href: null, title: t('friends.search', 'Search') }} />
+      <Tabs.Screen name="friends/search" options={{ href: null, title: t('friends.searchTab', 'Search') }} />
       <Tabs.Screen name="friends/requests" options={{ href: null, title: t('friends.requests', 'Requests') }} />
 
       {/* HIDDEN: Groups */}

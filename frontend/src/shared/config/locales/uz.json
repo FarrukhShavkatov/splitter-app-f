@@ -31,7 +31,9 @@
     "usernamePlaceholder": "Foydalanuvchi nomini kiriting",
     "forgotPassword": "Parolni unutdingizmi?",
     "noAccount": "Hisobingiz yo'qmi?",
-    "haveAccount": "Hisobingiz bormi?"
+    "haveAccount": "Hisobingiz bormi?",
+    "loginError": "Kirishda xatolik yuz berdi",
+    "registerError": "Ro'yxatdan o'tishda xatolik yuz berdi"
   },
   "common": {
     "welcome": "Xush kelibsiz",
@@ -45,6 +47,7 @@
   },
   "friends": {
     "title": "Do'stlar",
+    "searchTab": "Qidirish",
     "requests": "So'rovlar",
     "add": "Do'st qo'shish",
     "empty": "Hali do'stlar yo'q. Qo'shish uchun + tugmasini bosing.",
@@ -182,6 +185,7 @@
     "validation": {
       "usernameRequired": "Foydalanuvchi nomini kiriting.",
       "usernameMin": "Foydalanuvchi nomi kamida 2 ta belgidan iborat bo'lishi kerak.",
+      "usernameMax": "Foydalanuvchi nomi ko'pi bilan 15 ta belgidan iborat bo'lishi kerak.",
       "emailRequired": "Email kiriting.",
       "emailInvalid": "Yaroqli email kiriting.",
       "passwordCurrent": "Joriy parolni kiriting.",
@@ -211,12 +215,20 @@
     "itemsSplit": "Xarajatlarni bo'lish",
     "finish": "Yakunlash",
     "history": "So'nggi hisoblar",
-    "historyDetails": "Hisob tafsilotlari"
+    "historyDetails": "Hisob tafsilotlari",
+    "manualReceipt": "Qo'lda kiritish",
+    "notifications": "Bildirishnomalar"
   },
   "notifications": {
     "title": "Bildirishnomalar",
     "empty": "Hali bildirishnoma yo'q",
-    "markAllRead": "Hammasini o'qilgan deb belgilash"
+    "markAllRead": "Hammasini o'qilgan deb belgilash",
+    "time": {
+      "justNow": "hozirgina",
+      "minutesAgo": "{{count}} daqiqa oldin",
+      "hoursAgo": "{{count}} soat oldin",
+      "daysAgo": "{{count}} kun oldin"
+    }
   },
   "scanner": {
     "title": "Chekni skanerlash",
@@ -274,6 +286,120 @@
         "dark": "Qorong'u",
         "system": "Tizim"
       }
+    },
+    "page": {
+      "title": "Hisob sozlamalari",
+      "description": "Quyidagi formalar orqali foydalanuvchi nomi va parolni yangilang.",
+      "username": "Foydalanuvchi nomi",
+      "usernamePlaceholder": "Yangi foydalanuvchi nomini kiriting",
+      "saveUsername": "Nomni saqlash",
+      "reset": "Tiklash",
+      "password": "Parol",
+      "currentPassword": "Joriy parol",
+      "newPassword": "Yangi parol",
+      "confirmPassword": "Yangi parolni tasdiqlang",
+      "passwordHint": "Parol kamida 8 ta belgi bo'lib, katta va kichik harf, raqam va maxsus belgini o'z ichiga olishi kerak.",
+      "changePassword": "Parolni o'zgartirish",
+      "saving": "Saqlanmoqda...",
+      "updating": "Yangilanmoqda..."
     }
+  },
+  "groups": {
+    "title": "Guruhlar",
+    "empty": "Hali guruhlar yo'q. Yaratish uchun + tugmasini bosing.",
+    "common": {
+      "untitled": "Guruh",
+      "owner": "Egasi",
+      "member": "A'zo"
+    },
+    "list": {
+      "members": "{{count}} a'zo",
+      "members_zero": "Hali a'zolar yo'q"
+    },
+    "actions": {
+      "scanInvite": "Taklifni skanerlash",
+      "showQr": "QR kodim",
+      "rename": "Nomini o'zgartirish",
+      "delete": "O'chirish",
+      "addMember": "A'zo qo'shish",
+      "removeMember": "A'zoni olib tashlash"
+    },
+    "create": {
+      "title": "Guruh yaratish",
+      "back": "Guruhlarga qaytish",
+      "namePlaceholder": "Guruh nomi",
+      "action": "Yaratish",
+      "emptyState": "A'zolar qo'shish uchun guruh yarating.",
+      "manageMembers": "A'zolarni qo'shish yoki olib tashlash",
+      "searchPlaceholder": "Do'stlarni qidirish…",
+      "noFriends": "Ko'rsatish uchun do'stlar yo'q",
+      "addMember": "A'zo qo'shish",
+      "removeMember": "A'zoni olib tashlash",
+      "notice": {
+        "success": "Guruh yaratildi",
+        "error": "Guruh yaratib bo'lmadi",
+        "memberAdded": "A'zo qo'shildi",
+        "addFailed": "A'zo qo'shib bo'lmadi",
+        "memberRemoved": "A'zo olib tashlandi",
+        "removeFailed": "A'zoni olib tashlab bo'lmadi"
+      }
+    },
+    "invite": {
+      "title": "Guruh QR kodi",
+      "description": "Ushbu guruhga taklif",
+      "new": "Yangi QR",
+      "invalid": "Noto'g'ri guruh",
+      "error": "Taklif olinmadi"
+    },
+    "details": {
+      "members": "A'zolar",
+      "addFriends": "Do'stlarni qo'shish",
+      "searchPlaceholder": "Do'stlarni qidirish…",
+      "noCandidates": "Qo'shish uchun do'stlar yo'q",
+      "deleteConfirm": "Ushbu guruhni o'chirasizmi?",
+      "renamePlaceholder": "Guruh nomi"
+    }
+  },
+  "sessions": {
+    "participants": {
+      "search": "Qidirish…",
+      "select": "Tanlash",
+      "selected": "Tanlangan",
+      "next": "Keyingi",
+      "you": "Siz"
+    },
+    "itemsSplit": {
+      "orders": "Buyurtmalar",
+      "participants": "Ishtirokchilar ({{count}})",
+      "continue": "Davom etish",
+      "saving": "Saqlanmoqda...",
+      "equalSplit": "Teng bo'lish",
+      "byUnits": "Donalar bo'yicha",
+      "assignTo": "Kimga biriktirish:",
+      "all": "Hammasi",
+      "clear": "Tozalash",
+      "done": "Tayyor",
+      "successTitle": "Hisob saqlandi"
+    },
+    "finish": {
+      "title": "Hisob xulosasi",
+      "receipt": "Chek #{{id}}",
+      "totalAmount": "Umumiy summa",
+      "splitBy": "Ishtirokchi bo'yicha:",
+      "splitByItems": "Mahsulotlar bo'yicha:",
+      "finalize": "Yakunlash",
+      "finalizing": "Yakunlanmoqda...",
+      "complete": "Hisobni yakunlash",
+      "noAllocation": "Taqsimot tafsilotlari mavjud emas."
+    }
+  },
+  "inviteScan": {
+    "title": "Taklifni skanerlash",
+    "allowCamera": "Kameraga ruxsat bering",
+    "connecting": "Ulanmoqda…",
+    "error": "Noto'g'ri yoki muddati o'tgan QR kod",
+    "friendAccepted": "Do'st taklifi qabul qilindi",
+    "groupAccepted": "Guruh taklifi qabul qilindi",
+    "status": "Holat: {{status}}"
   }
 }

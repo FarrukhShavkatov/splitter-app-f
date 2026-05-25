@@ -162,7 +162,7 @@ export default function SessionsHistoryScreen() {
         }
       >
         <YStack w={358} gap="$1" mb="$2">
-          <Text fontSize={24} fontWeight="700">{t('history.title')}</Text>
+          <Text fontSize={24} fontWeight="700" color="$color">{t('history.title')}</Text>
           <Text fontSize={12} color="$gray10">{t('history.subtitle')}</Text>
         </YStack>
 

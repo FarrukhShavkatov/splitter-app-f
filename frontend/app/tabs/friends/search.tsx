@@ -185,7 +185,7 @@ export default function FriendsSearchScreen() {
   );
 
   return (
-    <YStack f={1} p="$4" gap="$3">
+    <YStack f={1} p="$4" gap="$3" bg="$background">
       <XStack gap="$2" ai="center">
         <Input
           f={1}

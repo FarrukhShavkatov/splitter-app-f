@@ -1,7 +1,7 @@
 // src/application/providers/TamaguiProvider.tsx
 import React from 'react'
 import { useColorScheme } from 'react-native'  // dark-mode colors
-import { TamaguiProvider as Provider } from '@tamagui/core'
+import { TamaguiProvider as Provider, Theme } from '@tamagui/core'
 import { PortalProvider } from '@tamagui/portal'
 import { useFonts } from 'expo-font'
 import config from '../../../tamagui.config'
@@ -31,9 +31,11 @@ export const TamaguiProvider: React.FC<TamaguiProviderProps> = ({ children }) =>
 
   return (
     <Provider config={config} defaultTheme={resolvedTheme}>
-      <PortalProvider>
-        {children}
-      </PortalProvider>
+      <Theme name={resolvedTheme}>
+        <PortalProvider>
+          {children}
+        </PortalProvider>
+      </Theme>
     </Provider>
   )
 }

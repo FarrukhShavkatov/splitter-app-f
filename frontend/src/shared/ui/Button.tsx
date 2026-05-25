@@ -34,8 +34,8 @@ const variantStyles: Record<Variant, { backgroundColor: string; color: string; b
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '$green10',
-    color: '$green10',
+    borderColor: '$primary',
+    color: '$primary',
   },
 };
 

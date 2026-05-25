@@ -69,7 +69,7 @@ export function LanguageSegmentedControl({
               height,
               width: segmentWidth,
               borderRadius: 999,
-              backgroundColor: theme.background?.val ?? '#ffffff',
+              backgroundColor: theme.color1?.val ?? '#ffffff',
               transform: [{ translateX: thumbAnim }],
               borderWidth: 1,
               borderColor: theme.borderColor?.val ?? '#D4D4D8',
@@ -107,7 +107,7 @@ export function LanguageSegmentedControl({
                 fontSize={13}
                 fontWeight="700"
                 // цвета читаемые и контрастные
-                color={active ? '$gray12' : '$gray11'}
+                color={active ? '$color' : '$gray11'}
               >
                 {label}
               </Text>

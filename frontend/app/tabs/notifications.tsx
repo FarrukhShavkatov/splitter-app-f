@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { RefreshControl } from 'react-native';
 import { YStack, XStack, Text, ScrollView, Separator } from 'tamagui';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeArea } from '@/shared/ui/ThemedSafeArea';
 import { Bell, UserPlus, UserCheck, Receipt, Users } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
 
@@ -20,7 +20,8 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 function NotificationItem({ item }: { item: AppNotification }) {
-  const ago = getTimeAgo(item.createdAt);
+  const { t } = useTranslation();
+  const ago = getTimeAgo(item.createdAt, t);
 
   return (
     <XStack
@@ -34,7 +35,7 @@ function NotificationItem({ item }: { item: AppNotification }) {
         {ICON_MAP[item.type] ?? <Bell size={20} color="$gray11" />}
       </YStack>
       <YStack f={1} gap="$1">
-        <Text fontSize={14} fontWeight={item.read ? '400' : '600'}>
+        <Text fontSize={14} fontWeight={item.read ? '400' : '600'} color="$color">
           {item.title}
         </Text>
         <Text fontSize={13} color="$gray10">
@@ -48,15 +49,15 @@ function NotificationItem({ item }: { item: AppNotification }) {
   );
 }
 
-function getTimeAgo(dateStr: string): string {
+function getTimeAgo(dateStr: string, t: (key: string, opts?: object) => string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 1) return t('notifications.time.justNow', 'just now');
+  if (minutes < 60) return t('notifications.time.minutesAgo', { count: minutes, defaultValue: '{{count}}m ago' });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t('notifications.time.hoursAgo', { count: hours, defaultValue: '{{count}}h ago' });
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return t('notifications.time.daysAgo', { count: days, defaultValue: '{{count}}d ago' });
 }
 
 export default function NotificationsScreen() {
@@ -76,7 +77,7 @@ export default function NotificationsScreen() {
   }, [fetchNotifications]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+    <ThemedSafeArea edges={['bottom']}>
       <ScrollView
         f={1}
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
@@ -86,7 +87,7 @@ export default function NotificationsScreen() {
       >
         <YStack p="$4" gap="$3">
           <XStack jc="space-between" ai="center">
-            <Text fontSize={20} fontWeight="700">
+            <Text fontSize={20} fontWeight="700" color="$color">
               {t('notifications.title', 'Notifications')}
             </Text>
             {unreadCount > 0 && (
@@ -116,6 +117,6 @@ export default function NotificationsScreen() {
           ))}
         </YStack>
       </ScrollView>
-    </SafeAreaView>
+    </ThemedSafeArea>
   );
 }

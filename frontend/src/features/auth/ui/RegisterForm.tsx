@@ -121,7 +121,7 @@ export default function RegisterForm() {
       <YStack gap="$6">
         {/* Header */}
         <YStack alignItems="center" gap="$4">
-          <Text fontSize="$8" fontWeight="900" color="$gray12">
+          <Text fontSize="$8" fontWeight="900" color="$color">
             {t('auth.createAccount', 'Create Account')}
           </Text>
           <Text fontSize="$4" color="$gray10" textAlign="center">

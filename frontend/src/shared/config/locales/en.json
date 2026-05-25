@@ -47,6 +47,7 @@
   },
   "friends": {
     "title": "Friends",
+    "searchTab": "Search",
     "requests": "Requests",
     "add": "Add Friend",
     "empty": "No friends yet. Tap + to add.",
@@ -184,6 +185,7 @@
     "validation": {
       "usernameRequired": "Username cannot be empty",
       "usernameMin": "Username must be at least 2 characters",
+      "usernameMax": "Username must be at most 15 characters",
       "emailRequired": "Email cannot be empty",
       "emailInvalid": "Enter a valid email address",
       "passwordCurrent": "Enter your current password",
@@ -214,12 +216,19 @@
     "itemsSplit": "Items Split",
     "finish": "Finish",
     "history": "Recent bills",
-    "historyDetails": "Bill details"
+    "historyDetails": "Bill details",
+    "notifications": "Notifications"
   },
   "notifications": {
     "title": "Notifications",
     "empty": "No notifications yet",
-    "markAllRead": "Mark all read"
+    "markAllRead": "Mark all read",
+    "time": {
+      "justNow": "just now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago"
+    }
   },
   "scanner": {
     "title": "Scan receipt",
@@ -277,6 +286,120 @@
         "dark": "Dark",
         "system": "System"
       }
+    },
+    "page": {
+      "title": "Account settings",
+      "description": "Update your username and password using the forms below.",
+      "username": "Username",
+      "usernamePlaceholder": "Enter a new username",
+      "saveUsername": "Save username",
+      "reset": "Reset",
+      "password": "Password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "passwordHint": "Password must be at least 8 characters and include uppercase, lowercase, number, and special symbol.",
+      "changePassword": "Change password",
+      "saving": "Saving...",
+      "updating": "Updating..."
     }
+  },
+  "groups": {
+    "title": "Groups",
+    "empty": "No groups yet. Tap + to create.",
+    "common": {
+      "untitled": "Group",
+      "owner": "Owner",
+      "member": "Member"
+    },
+    "list": {
+      "members": "{{count}} members",
+      "members_zero": "No members yet"
+    },
+    "actions": {
+      "scanInvite": "Scan invite",
+      "showQr": "Show QR",
+      "rename": "Rename",
+      "delete": "Delete",
+      "addMember": "Add member",
+      "removeMember": "Remove member"
+    },
+    "create": {
+      "title": "Create group",
+      "back": "Back to Groups",
+      "namePlaceholder": "Group name",
+      "action": "Create",
+      "emptyState": "Create a group to add members.",
+      "manageMembers": "Add or remove members",
+      "searchPlaceholder": "Search friends…",
+      "noFriends": "No friends to display",
+      "addMember": "Add member",
+      "removeMember": "Remove member",
+      "notice": {
+        "success": "Group created",
+        "error": "Failed to create group",
+        "memberAdded": "Member added",
+        "addFailed": "Failed to add member",
+        "memberRemoved": "Member removed",
+        "removeFailed": "Failed to remove member"
+      }
+    },
+    "invite": {
+      "title": "Group QR",
+      "description": "Invite to this group",
+      "new": "New QR",
+      "invalid": "Invalid group",
+      "error": "Failed to get invite"
+    },
+    "details": {
+      "members": "Members",
+      "addFriends": "Add friends",
+      "searchPlaceholder": "Search friends…",
+      "noCandidates": "No friends to add",
+      "deleteConfirm": "Delete this group?",
+      "renamePlaceholder": "Group name"
+    }
+  },
+  "sessions": {
+    "participants": {
+      "search": "Search…",
+      "select": "Select",
+      "selected": "Selected",
+      "next": "Next",
+      "you": "You"
+    },
+    "itemsSplit": {
+      "orders": "Orders",
+      "participants": "Participants ({{count}})",
+      "continue": "Continue",
+      "saving": "Saving...",
+      "equalSplit": "Equal split",
+      "byUnits": "By units",
+      "assignTo": "Assign to:",
+      "all": "All",
+      "clear": "Clear",
+      "done": "Done",
+      "successTitle": "Bill saved"
+    },
+    "finish": {
+      "title": "Bill Summary",
+      "receipt": "Receipt #{{id}}",
+      "totalAmount": "Total Amount",
+      "splitBy": "Split by participant:",
+      "splitByItems": "Split by items:",
+      "finalize": "Finalize",
+      "finalizing": "Finalizing...",
+      "complete": "Complete settlement",
+      "noAllocation": "No allocation details available."
+    }
+  },
+  "inviteScan": {
+    "title": "Scan invite",
+    "allowCamera": "Allow camera access",
+    "connecting": "Connecting…",
+    "error": "Invalid or expired QR code",
+    "friendAccepted": "Friend invite accepted",
+    "groupAccepted": "Group invite accepted",
+    "status": "Status: {{status}}"
   }
 }

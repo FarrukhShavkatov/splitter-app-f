@@ -84,7 +84,7 @@ export default function ManualReceiptScreen() {
             <YStack f={1} p="$4" gap="$4">
               {/* Session name */}
               <YStack gap="$2">
-                <Text fontSize={14} fontWeight="600" color="$gray12">
+                <Text fontSize={14} fontWeight="600" color="$color">
                   {t('manual.sessionName', 'Bill name')}
                 </Text>
                 <TInput
@@ -93,10 +93,10 @@ export default function ManualReceiptScreen() {
                   placeholder={t('manual.sessionNamePlaceholder', 'e.g. Dinner at cafe')}
                   borderRadius={10}
                   h={44}
-                  backgroundColor="$background"
+                  backgroundColor="$color1"
                   borderWidth={1}
                   borderColor="$gray7"
-                  color="$gray12"
+                  color="$color"
                   placeholderTextColor="$gray9"
                   focusStyle={{ borderColor: '$green9' }}
                 />
@@ -104,7 +104,7 @@ export default function ManualReceiptScreen() {
 
               {/* Currency */}
               <YStack gap="$2">
-                <Text fontSize={14} fontWeight="600" color="$gray12">
+                <Text fontSize={14} fontWeight="600" color="$color">
                   {t('manual.currency', 'Currency')}
                 </Text>
                 <XStack gap="$2" flexWrap="wrap">
@@ -125,7 +125,7 @@ export default function ManualReceiptScreen() {
               {/* Items */}
               <YStack gap="$3">
                 <XStack jc="space-between" ai="center">
-                  <Text fontSize={16} fontWeight="600" color="$gray12">
+                  <Text fontSize={16} fontWeight="600" color="$color">
                     {t('manual.items', 'Items')}
                   </Text>
                   <Pressable
@@ -147,7 +147,7 @@ export default function ManualReceiptScreen() {
                     borderWidth={1}
                     borderColor="$gray6"
                     borderRadius={12}
-                    backgroundColor="$gray2"
+                    backgroundColor="$color1"
                   >
                     <XStack jc="space-between" ai="center">
                       <Text fontSize={13} color="$gray10" fontWeight="500">
@@ -169,10 +169,10 @@ export default function ManualReceiptScreen() {
                       placeholder={t('manual.itemName', 'Item name')}
                       h={40}
                       borderRadius={8}
-                      backgroundColor="$background"
+                      backgroundColor="$color1"
                       borderWidth={1}
                       borderColor="$gray7"
-                      color="$gray12"
+                      color="$color"
                       placeholderTextColor="$gray9"
                       focusStyle={{ borderColor: '$green9' }}
                     />
@@ -189,10 +189,10 @@ export default function ManualReceiptScreen() {
                           keyboardType="decimal-pad"
                           h={40}
                           borderRadius={8}
-                          backgroundColor="$background"
+                          backgroundColor="$color1"
                           borderWidth={1}
                           borderColor="$gray7"
-                          color="$gray12"
+                          color="$color"
                           placeholderTextColor="$gray9"
                           focusStyle={{ borderColor: '$green9' }}
                         />
@@ -209,10 +209,10 @@ export default function ManualReceiptScreen() {
                           h={40}
                           borderRadius={8}
                           textAlign="center"
-                          backgroundColor="$background"
+                          backgroundColor="$color1"
                           borderWidth={1}
                           borderColor="$gray7"
-                          color="$gray12"
+                          color="$color"
                           placeholderTextColor="$gray9"
                           focusStyle={{ borderColor: '$green9' }}
                         />
@@ -233,7 +233,7 @@ export default function ManualReceiptScreen() {
                 borderColor="$gray5"
               >
                 <XStack jc="space-between" ai="center">
-                  <Text fontSize={16} fontWeight="600" color="$gray12">
+                  <Text fontSize={16} fontWeight="600" color="$color">
                     {t('manual.total', 'Total')}
                   </Text>
                   <Text fontSize={22} fontWeight="700" color="$primary">

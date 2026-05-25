@@ -10,6 +10,7 @@ import { ChevronLeft } from '@tamagui/lucide-icons';
 import { parseInviteFromScan } from '@/shared/lib/utils/invite';
 import { FriendsApi } from '@/features/friends/api/friends.api';
 import { GroupsApi } from '@/features/groups/api/groups.api';
+import { useTranslation } from 'react-i18next';
 
 type FromParam = 'friends-requests' | 'groups-index' | undefined;
 
@@ -21,6 +22,7 @@ interface UserData {
 }
 
 export default function ScanInviteScreen() {
+  const { t } = useTranslation();
   const [perm, requestPerm] = useCameraPermissions();
   const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -90,7 +92,9 @@ export default function ScanInviteScreen() {
         null;
 
       const fallbackName =
-        parsed.kind === 'group' ? 'Group invite accepted' : 'Friend invite accepted';
+        parsed.kind === 'group'
+          ? t('inviteScan.groupAccepted', 'Group invite accepted')
+          : t('inviteScan.friendAccepted', 'Friend invite accepted');
       const fallbackUsername = parsed.kind === 'group' ? '@group' : '@friend';
       const actionText =
         parsed.kind === 'group'
@@ -106,7 +110,7 @@ export default function ScanInviteScreen() {
             : userLike?.username
             ? `@${String(userLike.username).toLowerCase()}`
             : fallbackUsername,
-        bio: `Status: ${String(actionText)}`,
+        bio: t('inviteScan.status', { status: String(actionText), defaultValue: 'Status: {{status}}' }),
       });
 
       setStatus('ok');
@@ -132,9 +136,9 @@ export default function ScanInviteScreen() {
             icon={<ChevronLeft size={18} color="white" />}
             color="white"
           >
-            Back
+            {t('common.back', 'Back')}
           </Button>
-          <Paragraph fow="700" fos="$6" col="white">Scan invite</Paragraph>
+          <Paragraph fow="700" fos="$6" col="white">{t('inviteScan.title', 'Scan invite')}</Paragraph>
           <YStack w={54} />
         </XStack>
       </View>
@@ -152,7 +156,7 @@ export default function ScanInviteScreen() {
           />
         ) : (
           <YStack f={1} ai="center" jc="center">
-            <Paragraph col="$gray1">Allow camera access</Paragraph>
+            <Paragraph col="white">{t('inviteScan.allowCamera', 'Allow camera access')}</Paragraph>
           </YStack>
         )}
       </View>
@@ -161,14 +165,14 @@ export default function ScanInviteScreen() {
         <View style={S.overlay}>
           <YStack ai="center" gap="$2">
             <ActivityIndicator color="white" />
-            <Paragraph col="white">ConnectingвЂ¦</Paragraph>
+            <Paragraph col="white">{t('inviteScan.connecting', 'Connecting…')}</Paragraph>
           </YStack>
         </View>
       )}
 
       {status === 'error' && (
         <View style={S.overlay}>
-          <Paragraph col="white">Error рџ•</Paragraph>
+          <Paragraph col="white">{t('inviteScan.error', 'Invalid or expired QR code')}</Paragraph>
         </View>
       )}
 

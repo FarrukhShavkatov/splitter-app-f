@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { YStack, Text, Separator, XStack } from 'tamagui';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeArea } from '@/shared/ui/ThemedSafeArea';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/Button';
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
@@ -133,7 +133,7 @@ export default function SettingsScreen() {
   }, [currentPassword, newPassword, confirmPassword, passwordError]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <ThemedSafeArea>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -148,17 +148,17 @@ export default function SettingsScreen() {
             <YStack space="$5">
               {/* Header */}
               <YStack space="$3" mt="$4">
-                <Text fontSize={20} fontWeight="700">
-                  Account settings
+                <Text fontSize={20} fontWeight="700" color="$color">
+                  {t('settings.page.title', 'Account settings')}
                 </Text>
                 <Text color="$gray10">
-                  Update your username and password using the forms below.
+                  {t('settings.page.description', 'Update your username and password using the forms below.')}
                 </Text>
               </YStack>
 
               {/* LANGUAGE */}
               <YStack space="$3">
-                <Text fontSize={16} fontWeight="600">
+                <Text fontSize={16} fontWeight="600" color="$color">
                   {t('settings.language.title', 'Language')}
                 </Text>
                 <Text fontSize={14} color="$gray10">
@@ -195,24 +195,24 @@ export default function SettingsScreen() {
 
               {/* USERNAME */}
               <YStack space="$3">
-                <Text fontSize={16} fontWeight="600">Username</Text>
+                <Text fontSize={16} fontWeight="600" color="$color">{t('settings.page.username', 'Username')}</Text>
                 <Input
                   value={usernameValue}
                   onChangeText={setUsernameValue}
-                  placeholder="Enter a new username"
+                  placeholder={t('settings.page.usernamePlaceholder', 'Enter a new username')}
                   textInputProps={{ autoCapitalize: 'none', autoCorrect: false }}
                   error={usernameError || undefined}
                 />
                 <XStack space="$2">
                   <Button
-                    title={isUpdatingUsername ? 'Saving...' : 'Save username'}
+                    title={isUpdatingUsername ? t('settings.page.saving', 'Saving...') : t('settings.page.saveUsername', 'Save username')}
                     variant="primary"
                     size="medium"
                     disabled={!usernameDirty || isUpdatingUsername}
                     onPress={handleSaveUsername}
                   />
                   <Button
-                    title="Reset"
+                    title={t('settings.page.reset', 'Reset')}
                     variant="outline"
                     size="medium"
                     disabled={!usernameDirty}
@@ -225,31 +225,31 @@ export default function SettingsScreen() {
 
               {/* PASSWORD */}
               <YStack space="$3">
-                <Text fontSize={16} fontWeight="600">Password</Text>
+                <Text fontSize={16} fontWeight="600" color="$color">{t('settings.page.password', 'Password')}</Text>
                 <PasswordInput
                   value={currentPassword}
                   onChangeText={setCurrentPassword}
-                  placeholder="Current password"
+                  placeholder={t('settings.page.currentPassword', 'Current password')}
                   textInputProps={{ returnKeyType: 'next' }}
                 />
                 <PasswordInput
                   value={newPassword}
                   onChangeText={setNewPassword}
-                  placeholder="New password"
+                  placeholder={t('settings.page.newPassword', 'New password')}
                   textInputProps={{ returnKeyType: 'next' }}
                 />
                 <Text fontSize={12} color="$gray10">
-                  Password must be at least 8 characters and include uppercase, lowercase, number, and special symbol.
+                  {t('settings.page.passwordHint', 'Password must be at least 8 characters and include uppercase, lowercase, number, and special symbol.')}
                 </Text>
                 <PasswordInput
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
-                  placeholder="Confirm new password"
+                  placeholder={t('settings.page.confirmPassword', 'Confirm new password')}
                   error={passwordError || undefined}
                   textInputProps={{ returnKeyType: 'done' }}
                 />
                 <Button
-                  title={isChangingPassword ? 'Updating...' : 'Change password'}
+                  title={isChangingPassword ? t('settings.page.updating', 'Updating...') : t('settings.page.changePassword', 'Change password')}
                   variant="primary"
                   size="medium"
                   disabled={isChangingPassword}
@@ -260,6 +260,6 @@ export default function SettingsScreen() {
           </ScreenContainer>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ThemedSafeArea>
   );
 }

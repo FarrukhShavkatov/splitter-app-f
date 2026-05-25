@@ -10,10 +10,12 @@ import UserAvatar from '@/shared/ui/UserAvatar';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { useGroupsStore } from '@/features/groups/model/groups.store';
 import { useReceiptSessionStore } from '@/features/receipt/model/receipt-session.store';
+import { useTranslation } from 'react-i18next';
 
 type LiteUser = { uniqueId: string; username: string; avatarUrl?: string | null };
 
 export default function SessionParticipantsScreen() {
+  const { t } = useTranslation();
   const { receiptId } = useLocalSearchParams<{ receiptId?: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -46,7 +48,7 @@ export default function SessionParticipantsScreen() {
   const meUid = useMemo(() => {
     return (me?.uniqueId || me?.username || (typeof me?.id === 'number' ? `id:${me.id}` : '')) as string;
   }, [me?.uniqueId, me?.username, me?.id]);
-  const meName = useMemo(() => (me?.username || 'You') as string, [me?.username]);
+  const meName = useMemo(() => (me?.username || t('sessions.participants.you', 'You')) as string, [me?.username, t]);
 
   // гарантируем, что «я» всегда в selected = true при появлении user
   useEffect(() => {
@@ -247,7 +249,7 @@ export default function SessionParticipantsScreen() {
       jc="center"
     >
       <Text fontSize={14} fontWeight="500" color={on ? '#FFFFFF' : '$gray11'}>
-        {on ? 'Selected' : 'Select'}
+        {on ? t('sessions.participants.selected', 'Selected') : t('sessions.participants.select', 'Select')}
       </Text>
     </Button>
   );
@@ -312,7 +314,7 @@ export default function SessionParticipantsScreen() {
 
       {/* Search */}
       <Input
-        placeholder="Search…"
+        placeholder={t('sessions.participants.search', 'Search…')}
         value={q}
         onChangeText={setQ}
         h={41}
@@ -349,7 +351,7 @@ export default function SessionParticipantsScreen() {
                   <XStack ai="center" gap="$3">
                     <UserAvatar uri={avatarUrl ?? undefined} label={(p.username || "U").slice(0, 1).toUpperCase()} size={32} textSize={12} backgroundColor="$gray5" />
                     <YStack>
-                      <Text fontSize={16} fontWeight="600">{p.username}</Text>
+                      <Text fontSize={16} fontWeight="600" color="$color">{p.username}</Text>
                       <Text fontSize={12} color="$gray10">
                         @{p.uniqueId.toLowerCase().replace('user#', 'user')}
                       </Text>
@@ -386,7 +388,7 @@ export default function SessionParticipantsScreen() {
           opacity={canNext ? 1 : 0.5}
         >
           <Text fontSize={16} fontWeight="500" color="#FFFFFF" style={{ lineHeight: 25 }}>
-            Next
+            {t('sessions.participants.next', 'Next')}
           </Text>
         </Button>
       </YStack>

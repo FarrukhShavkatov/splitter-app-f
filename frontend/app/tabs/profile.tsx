@@ -5,7 +5,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { YStack, XStack, Text, Button, Separator, Spinner } from 'tamagui';
 import { Copy, LogOut, Upload, RotateCcw, CheckCircle, User as UserIcon, Mail, Lock, Edit3, X, Check, Languages } from '@tamagui/lucide-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeArea } from '@/shared/ui/ThemedSafeArea';
 import { useTranslation } from 'react-i18next';
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
 import UserAvatar from '@/shared/ui/UserAvatar';
@@ -47,7 +47,7 @@ function SectionCard({ title, icon, children, successTrigger = 0 }: SectionCardP
       <XStack ai="center" jc="space-between">
         <XStack ai="center" gap="$2">
           {icon}
-          <Text fontSize={16} fontWeight="700">
+          <Text fontSize={16} fontWeight="700" color="$color">
             {title}
           </Text>
         </XStack>
@@ -130,7 +130,7 @@ function InfoRow({ label, value, onCopy }: InfoRowProps) {
         {label}
       </Text>
       <XStack ai="center" jc="space-between">
-        <Text fontSize={16} fontWeight="600">
+        <Text fontSize={16} fontWeight="600" color="$color">
           {value || '—'}
         </Text>
         {onCopy && (
@@ -258,7 +258,7 @@ function EditableFieldRow({
           textInputProps={{ autoCapitalize: 'none', autoCorrect: false, ...textInputProps }}
         />
       ) : (
-        <Text fontSize={16} fontWeight="600">
+        <Text fontSize={16} fontWeight="600" color="$color">
           {value || '—'}
         </Text>
       )}
@@ -703,7 +703,7 @@ export default function ProfileScreen() {
   const isResetDisabled = isResettingAvatar || (!user?.avatarUrl && !previewUri);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <ThemedSafeArea>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -885,6 +885,6 @@ export default function ProfileScreen() {
           </ScreenContainer>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ThemedSafeArea>
   );
 }

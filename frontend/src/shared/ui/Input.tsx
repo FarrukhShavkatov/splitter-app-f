@@ -68,8 +68,10 @@ export function Input({
           paddingRight={rightAdornment ? 44 : undefined}
           borderRadius="$4"
           borderWidth={1}
-          borderColor={error ? '$red8' : '$gray7'}
-          backgroundColor="$background"
+          borderColor={error ? '$red8' : '$gray6'}
+          backgroundColor="$color1"
+          color="$color"
+          placeholderTextColor="$gray9"
           height="$4"
           fontSize="$4"
           focusStyle={{ borderColor: error ? '$red8' : '$green9' }}

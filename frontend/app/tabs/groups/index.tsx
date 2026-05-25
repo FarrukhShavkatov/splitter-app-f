@@ -127,7 +127,7 @@ export default function GroupsListScreen() {
           >
             <XStack w="100%" jc="space-between" ai="center">
               <YStack>
-                <Paragraph fow="700" fos={16}>
+                <Paragraph fow="700" fos={16} col="$color">
                   {groupName}
                 </Paragraph>
                 <Paragraph size={12} col="$gray10">
@@ -144,7 +144,7 @@ export default function GroupsListScreen() {
 
   if (loading && hasNoGroups) {
     return (
-      <YStack f={1} ai="center" jc="center">
+      <YStack f={1} ai="center" jc="center" bg="$background">
         <Spinner />
       </YStack>
     );
@@ -152,7 +152,7 @@ export default function GroupsListScreen() {
 
   return (
     <YStack f={1} p="$4" gap="$3" bg="$background">
-      <Paragraph fow="700" fos="$7">
+      <Paragraph fow="700" fos="$7" col="$color">
         {t('groups.title', 'Groups')}
       </Paragraph>
       <Separator />

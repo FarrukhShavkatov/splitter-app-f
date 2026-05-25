@@ -47,14 +47,47 @@
   },
   "friends": {
     "title": "友だち",
+    "searchTab": "検索",
     "requests": "リクエスト",
     "add": "友だちを追加",
     "empty": "まだ友だちがいません。+ をタップして追加しましょう。",
-    "searchPlaceholder": "ID を入力してください (例: USER#1234)",
+    "searchPlaceholder": "ユーザーIDまたはユーザー名を入力",
     "send": "リクエストを送信",
     "remove": "削除",
     "loading": "読み込み中...",
-    "error": "読み込みに失敗しました"
+    "error": "読み込みに失敗しました",
+    "common": {
+      "unknownUser": "不明なユーザー",
+      "error": "問題が発生しました"
+    },
+    "status": {
+      "add": "追加",
+      "you": "あなた",
+      "friend": "友だち",
+      "requested": "送信済み",
+      "incoming": "受信"
+    },
+    "search": {
+      "placeholder": "ユーザーIDまたはユーザー名を入力",
+      "hint": "ユーザーIDまたはユーザー名で検索",
+      "button": "検索",
+      "noResults": "結果が見つかりません",
+      "notFound": "ユーザーが見つかりません",
+      "error": "検索に失敗しました",
+      "inviteSent": "{{target}} に招待を送信しました",
+      "inviteFailed": "招待を送信できませんでした"
+    },
+    "requestsScreen": {
+      "accepted": "{{target}} を友だちに追加しました",
+      "rejected": "{{target}} からのリクエストを拒否しました",
+      "tabOutgoing": "送信",
+      "tabIncoming": "受信",
+      "scanInvite": "招待をスキャン",
+      "showMyQr": "自分のQR",
+      "emptyIncoming": "受信リクエストはありません",
+      "emptyOutgoing": "送信リクエストはありません",
+      "requestedLabel": "送信済み"
+    }
   },
   "home": {
     "header": {
@@ -152,6 +185,7 @@
     "validation": {
       "usernameRequired": "ユーザー名を入力してください。",
       "usernameMin": "ユーザー名は2文字以上で入力してください。",
+      "usernameMax": "ユーザー名は15文字以内で入力してください。",
       "emailRequired": "メールアドレスを入力してください。",
       "emailInvalid": "有効なメールアドレスを入力してください。",
       "passwordCurrent": "現在のパスワードを入力してください。",
@@ -181,12 +215,20 @@
     "itemsSplit": "アイテムの分割",
     "finish": "完了",
     "history": "最近の明細",
-    "historyDetails": "明細の詳細"
+    "historyDetails": "明細の詳細",
+    "manualReceipt": "手動入力",
+    "notifications": "通知"
   },
   "notifications": {
     "title": "通知",
     "empty": "通知はまだありません",
-    "markAllRead": "すべて既読にする"
+    "markAllRead": "すべて既読にする",
+    "time": {
+      "justNow": "たった今",
+      "minutesAgo": "{{count}}分前",
+      "hoursAgo": "{{count}}時間前",
+      "daysAgo": "{{count}}日前"
+    }
   },
   "scanner": {
     "title": "レシートをスキャン",
@@ -244,6 +286,120 @@
         "dark": "ダーク",
         "system": "システム"
       }
+    },
+    "page": {
+      "title": "アカウント設定",
+      "description": "以下のフォームでユーザー名とパスワードを更新できます。",
+      "username": "ユーザー名",
+      "usernamePlaceholder": "新しいユーザー名を入力",
+      "saveUsername": "ユーザー名を保存",
+      "reset": "リセット",
+      "password": "パスワード",
+      "currentPassword": "現在のパスワード",
+      "newPassword": "新しいパスワード",
+      "confirmPassword": "新しいパスワードを確認",
+      "passwordHint": "パスワードは8文字以上で、大文字・小文字・数字・記号を含めてください。",
+      "changePassword": "パスワードを変更",
+      "saving": "保存中...",
+      "updating": "更新中..."
     }
+  },
+  "groups": {
+    "title": "グループ",
+    "empty": "まだグループがありません。+ をタップして作成しましょう。",
+    "common": {
+      "untitled": "グループ",
+      "owner": "オーナー",
+      "member": "メンバー"
+    },
+    "list": {
+      "members": "{{count}} 人",
+      "members_zero": "まだメンバーがいません"
+    },
+    "actions": {
+      "scanInvite": "招待をスキャン",
+      "showQr": "QRを表示",
+      "rename": "名前を変更",
+      "delete": "削除",
+      "addMember": "メンバーを追加",
+      "removeMember": "メンバーを削除"
+    },
+    "create": {
+      "title": "グループを作成",
+      "back": "グループ一覧へ",
+      "namePlaceholder": "グループ名",
+      "action": "作成",
+      "emptyState": "メンバーを追加するにはグループを作成してください。",
+      "manageMembers": "メンバーの追加・削除",
+      "searchPlaceholder": "友だちを検索…",
+      "noFriends": "表示する友だちがいません",
+      "addMember": "メンバーを追加",
+      "removeMember": "メンバーを削除",
+      "notice": {
+        "success": "グループを作成しました",
+        "error": "グループの作成に失敗しました",
+        "memberAdded": "メンバーを追加しました",
+        "addFailed": "メンバーの追加に失敗しました",
+        "memberRemoved": "メンバーを削除しました",
+        "removeFailed": "メンバーの削除に失敗しました"
+      }
+    },
+    "invite": {
+      "title": "グループQR",
+      "description": "このグループに招待",
+      "new": "新しいQR",
+      "invalid": "無効なグループ",
+      "error": "招待の取得に失敗しました"
+    },
+    "details": {
+      "members": "メンバー",
+      "addFriends": "友だちを追加",
+      "searchPlaceholder": "友だちを検索…",
+      "noCandidates": "追加できる友だちがいません",
+      "deleteConfirm": "このグループを削除しますか？",
+      "renamePlaceholder": "グループ名"
+    }
+  },
+  "sessions": {
+    "participants": {
+      "search": "検索…",
+      "select": "選択",
+      "selected": "選択済み",
+      "next": "次へ",
+      "you": "あなた"
+    },
+    "itemsSplit": {
+      "orders": "注文",
+      "participants": "参加者 ({{count}})",
+      "continue": "続ける",
+      "saving": "保存中...",
+      "equalSplit": "均等割",
+      "byUnits": "数量ごと",
+      "assignTo": "割り当て:",
+      "all": "すべて",
+      "clear": "クリア",
+      "done": "完了",
+      "successTitle": "明細を保存しました"
+    },
+    "finish": {
+      "title": "明細サマリー",
+      "receipt": "レシート #{{id}}",
+      "totalAmount": "合計金額",
+      "splitBy": "参加者ごと:",
+      "splitByItems": "品目ごと:",
+      "finalize": "確定",
+      "finalizing": "確定中...",
+      "complete": "精算を完了",
+      "noAllocation": "割り当ての詳細がありません。"
+    }
+  },
+  "inviteScan": {
+    "title": "招待をスキャン",
+    "allowCamera": "カメラへのアクセスを許可してください",
+    "connecting": "接続中…",
+    "error": "無効または期限切れのQRコード",
+    "friendAccepted": "友だち招待を承認しました",
+    "groupAccepted": "グループ招待を承認しました",
+    "status": "ステータス: {{status}}"
   }
 }

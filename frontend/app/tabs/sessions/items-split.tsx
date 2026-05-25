@@ -10,6 +10,7 @@ import { useAppStore } from '@/shared/lib/stores/app-store';
 import { useReceiptSessionStore } from '@/features/receipt/model/receipt-session.store';
 import type { FinishPayload, ReceiptSplitItem } from '@/features/receipt/model/receipt-session.store';
 import { ReceiptApi } from '@/features/receipt/api/receipt.api';
+import { useTranslation } from 'react-i18next';
 import type { FinalizeReceiptItemPayload, FinalizeTotalsByItem, FinalizeTotalsByParticipant, ReceiptAllocation } from '@/features/receipt/api/receipt.api';
 
 // ===== Types =====
@@ -229,6 +230,7 @@ const parseParticipantsParam = (raw?: string): Participant[] => {
 };
 
 export default function ItemsSplitScreen() {
+  const { t } = useTranslation();
   const { participants: participantsParam, receiptId } = useLocalSearchParams<{
     participants?: string;
     receiptId?: string;
@@ -778,8 +780,8 @@ export default function ItemsSplitScreen() {
       <YStack bg="$background" p="$4" pb="$2">
         <XStack w="100%" ai="center" jc="flex-start" mb="$3">
           <YStack ai="flex-start">
-            <Text fontSize={16} fontWeight="700">
-              Orders
+            <Text fontSize={16} fontWeight="700" color="$color">
+              {t('sessions.itemsSplit.orders', 'Orders')}
             </Text>
             <Text fontSize={12} color="$gray10">
               {sessionReceiptId ?? (isMockSession ? 'mock-001' : 'N/A')}
@@ -800,7 +802,7 @@ export default function ItemsSplitScreen() {
             <XStack w="100%" ai="center" jc="flex-start" mb="$2">
               <XStack ai="center" gap="$2">
                 <UsersIcon size={18} color="$gray10" />
-                <Text fontWeight="700">Participants ({participants.length})</Text>
+                <Text fontWeight="700" color="$color">{t('sessions.itemsSplit.participants', { count: participants.length, defaultValue: 'Participants ({{count}})' })}</Text>
               </XStack>
             </XStack>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -872,7 +874,7 @@ export default function ItemsSplitScreen() {
                 >
                   <XStack w="100%" ai="center" jc="space-between" px={16} py="$3" gap="$3">
                     <YStack f={1} pr={12} gap="$1">
-                      <Text fontSize={16} fontWeight="700" numberOfLines={1}>
+                      <Text fontSize={16} fontWeight="700" numberOfLines={1} color="$color">
                         {it.name}
                         {it.quantity > 1 ? ` (${it.quantity}x)` : ''}
                       </Text>
@@ -969,7 +971,7 @@ export default function ItemsSplitScreen() {
               opacity={finalizing ? 0.6 : 1}
             >
               <Text fontSize={16} fontWeight="600" color="white">
-                {finalizing ? 'Saving...' : 'Continue'}
+                {finalizing ? t('sessions.itemsSplit.saving', 'Saving...') : t('sessions.itemsSplit.continue', 'Continue')}
               </Text>
             </Button>
             {submitError && (
@@ -1017,13 +1019,13 @@ export default function ItemsSplitScreen() {
             {editingItem && editingItem.quantity > 1 && (
               <XStack gap="$2" mb="$2">
                 <ModeToggleButton
-                  label="Equal split"
+                  label={t('sessions.itemsSplit.equalSplit', 'Equal split')}
                   icon={<UsersIcon size={16} color={isEqualMode ? 'white' : '$gray11'} />}
                   active={isEqualMode}
                   onPress={switchToEqual}
                 />
                 <ModeToggleButton
-                  label="By units"
+                  label={t('sessions.itemsSplit.byUnits', 'By units')}
                   icon={<PackageIcon size={16} color={isCountMode ? 'white' : '$gray11'} />}
                   active={isCountMode}
                   onPress={switchToCount}
@@ -1032,17 +1034,17 @@ export default function ItemsSplitScreen() {
             )}
 
             <XStack w="100%" ai="center" jc="space-between" mb="$2">
-              <Text fontWeight="600">Assign to:</Text>
+              <Text fontWeight="600" color="$color">{t('sessions.itemsSplit.assignTo', 'Assign to:')}</Text>
               <XStack ai="center" gap="$2">
                 <Button chromeless onPress={modalAll}>
                   <Text color="$primary" fontWeight="700">
-                    All
+                    {t('sessions.itemsSplit.all', 'All')}
                   </Text>
                 </Button>
                 <Text color="$gray8">|</Text>
                 <Button chromeless onPress={modalClear}>
                   <Text color="$red10" fontWeight="700">
-                    Clear
+                    {t('sessions.itemsSplit.clear', 'Clear')}
                   </Text>
                 </Button>
               </XStack>
