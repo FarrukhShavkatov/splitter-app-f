@@ -144,6 +144,8 @@ enum NotificationType {
   SESSION_CREATED
   SESSION_FINALIZED
   GROUP_INVITE
+  DEBT_REMINDER
+  PAYMENT_MARKED
 }
 
 enum FriendshipStatus {

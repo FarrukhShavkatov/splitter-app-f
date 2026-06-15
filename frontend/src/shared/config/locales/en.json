@@ -357,7 +357,10 @@
       "searchPlaceholder": "Search friends…",
       "noCandidates": "No friends to add",
       "deleteConfirm": "Delete this group?",
-      "renamePlaceholder": "Group name"
+      "renamePlaceholder": "Group name",
+      "startBill": "Start bill with group",
+      "startBillHint": "Members are pre-filled. Scan a receipt or enter items manually.",
+      "startBillError": "Could not start a bill for this group"
     }
   },
   "sessions": {
@@ -372,6 +375,16 @@
       "orders": "Orders",
       "participants": "Participants ({{count}})",
       "continue": "Continue",
+      "assignProgress": "Assignment progress",
+      "editBannerTitle": "Check items before splitting",
+      "editBannerHint": "Fix names, prices, or quantities after scanning.",
+      "editItem": "Edit",
+      "editModalTitle": "Edit item",
+      "itemName": "Item name",
+      "unitPrice": "Unit price",
+      "quantity": "Quantity",
+      "deleteItem": "Remove item",
+      "saveItem": "Save",
       "saving": "Saving...",
       "equalSplit": "Equal split",
       "byUnits": "By units",
@@ -379,7 +392,9 @@
       "all": "All",
       "clear": "Clear",
       "done": "Done",
-      "successTitle": "Bill saved"
+      "successTitle": "Bill saved",
+      "who": "Who?",
+      "change": "Change"
     },
     "finish": {
       "title": "Bill Summary",
@@ -390,7 +405,68 @@
       "finalize": "Finalize",
       "finalizing": "Finalizing...",
       "complete": "Complete settlement",
-      "noAllocation": "No allocation details available."
+      "noAllocation": "No allocation details available.",
+      "actionsHint": "Share the result or mark payments in history.",
+      "markPaid": "Mark paid",
+      "markedPaid": "Paid",
+      "paymentSection": "Payment status"
+    },
+    "history": {
+      "loading": "Loading…",
+      "notFound": "Bill not found",
+      "back": "Back",
+      "participantsCount": "{{count}} participants",
+      "noItems": "No items linked",
+      "itemFallback": "Item",
+      "actionsHint": "Share with friends or repeat this bill with the same people.",
+      "repeat": "Repeat bill",
+      "share": "Share",
+      "markPaid": "Mark as paid",
+      "markedPaid": "Paid",
+      "owed": "Owes {{amount}}"
+    }
+  },
+  "billFeatures": {
+    "share": {
+      "title": "Receipt Splitter",
+      "total": "Total",
+      "perPerson": "Per person",
+      "paid": "paid",
+      "unpaid": "unpaid",
+      "footer": "Shared via Receipt Splitter"
+    },
+    "repeat": {
+      "copySuffix": " (copy)",
+      "loading": "Preparing…",
+      "error": "Could not repeat this bill"
+    },
+    "debt": {
+      "title": "You owe",
+      "body": "{{amount}} for \"{{name}}\""
+    },
+    "payment": {
+      "markedTitle": "Payment marked"
+    },
+    "guide": {
+      "title": "How to use",
+      "subtitle": "Receipt → split → share → settle",
+      "open": "Open guide",
+      "step1Title": "1. Add receipt",
+      "step1Body": "Scan a receipt or enter items manually from Home.",
+      "step2Title": "2. Edit items (after scan)",
+      "step2Body": "On the split screen, tap Edit on any line to fix name, price, or quantity.",
+      "step3Title": "3. Assign & finish",
+      "step3Body": "Tap Who? on each item, then Continue to see each person's total.",
+      "step4Title": "4. Share result",
+      "step4Body": "On the summary screen or bill history, tap Share to send amounts via chat.",
+      "step5Title": "5. Debt reminders",
+      "step5Body": "After finalize, participants receive a notification with their amount owed.",
+      "step6Title": "6. Mark paid",
+      "step6Body": "On bill details, tap Mark as paid when someone has paid you.",
+      "step7Title": "7. Repeat bill",
+      "step7Body": "Use Repeat bill to start again with the same people and items.",
+      "step8Title": "8. Groups",
+      "step8Body": "In a group, tap Start bill with group to pre-fill members."
     }
   },
   "inviteScan": {

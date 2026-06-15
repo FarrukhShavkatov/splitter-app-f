@@ -10,6 +10,7 @@ import { ScreenContainer } from '@/shared/ui/ScreenContainer';
 import UserAvatar from '@/shared/ui/UserAvatar';
 import type { SessionHistoryEntry } from '@/features/sessions/api/history.api';
 import { useSessionsHistoryStore } from '@/features/sessions/model/history.store';
+import { replaySessionFromHistory } from '@/features/sessions/lib/replay-session';
 
 const HOME_HISTORY_LIMIT = 10;
 const DEFAULT_CURRENCY = 'UZS';
@@ -106,12 +107,16 @@ function BillCard({
   amountLabel,
   participantIds,
   onPress,
+  onRepeat,
+  repeatLabel,
 }: {
   title: string;
   sub: string;
   amountLabel: string;
   participantIds: string[];
   onPress?: () => void;
+  onRepeat?: () => void;
+  repeatLabel?: string;
 }) {
   return (
     <Pressable
@@ -144,8 +149,21 @@ function BillCard({
           </Text>
         </XStack>
 
-        <XStack mt="auto" ai="center">
+        <XStack mt="auto" ai="center" jc="space-between">
           <AvatarStack participantIds={participantIds} />
+          {onRepeat ? (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation?.();
+                onRepeat();
+              }}
+              style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+            >
+              <Text fontSize={12} fontWeight="700" color="$primary">
+                {repeatLabel ?? 'Repeat'}
+              </Text>
+            </Pressable>
+          ) : null}
         </XStack>
       </YStack>
     </Pressable>
@@ -298,6 +316,20 @@ export default function HomePage() {
                 sub={summary}
                 amountLabel={amountLabel}
                 participantIds={participantIds}
+                repeatLabel={t('sessions.history.repeat', 'Repeat bill')}
+                onRepeat={async () => {
+                  try {
+                    await replaySessionFromHistory(bill, {
+                      sessionNameSuffix: t('billFeatures.repeat.copySuffix', ' (copy)'),
+                    });
+                    router.push({
+                      pathname: '/tabs/sessions/items-split',
+                      params: { receiptId: String(bill.sessionId) },
+                    });
+                  } catch {
+                    // ignore — user can retry from history detail
+                  }
+                }}
                 onPress={() =>
                   router.push({
                     pathname: '/tabs/sessions/history/[historyId]',

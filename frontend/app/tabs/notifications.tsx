@@ -2,7 +2,7 @@ import React, { useEffect, useCallback } from 'react';
 import { RefreshControl } from 'react-native';
 import { YStack, XStack, Text, ScrollView, Separator } from 'tamagui';
 import { ThemedSafeArea } from '@/shared/ui/ThemedSafeArea';
-import { Bell, UserPlus, UserCheck, Receipt, Users } from '@tamagui/lucide-icons';
+import { Bell, UserPlus, UserCheck, Receipt, Users, Wallet, BadgeCheck } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/shared/ui/Button';
@@ -17,6 +17,8 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   SESSION_CREATED: <Receipt size={20} color="$gray11" />,
   SESSION_FINALIZED: <Receipt size={20} color="$primary" />,
   GROUP_INVITE: <Users size={20} color="$blue10" />,
+  DEBT_REMINDER: <Wallet size={20} color="$orange10" />,
+  PAYMENT_MARKED: <BadgeCheck size={20} color="$green10" />,
 };
 
 function NotificationItem({ item }: { item: AppNotification }) {

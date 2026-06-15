@@ -31,6 +31,13 @@ export type SessionHistoryItem = {
   total: number;
 };
 
+export type SessionPaymentStatusEntry = {
+  paid: boolean;
+  paidAt?: string | null;
+};
+
+export type SessionPaymentStatusMap = Record<string, SessionPaymentStatusEntry>;
+
 /** Упакованный пэйлоуд от бэка (внутри entries[n].payload) */
 export type SessionHistoryPayload = {
   status: 'finalized' | 'draft' | string;
@@ -45,6 +52,7 @@ export type SessionHistoryPayload = {
   allocations: SessionHistoryAllocation[];
   finalizedAt?: string;
   sessionName?: string;
+  paymentStatus?: SessionPaymentStatusMap;
 };
 
 /** Сырая запись, как приходит с сервера */
@@ -212,5 +220,20 @@ export const SessionsHistoryApi = {
       isLoading = false;
       logReq('cancelCurrentRequest() called');
     }
+  },
+
+  async updatePaymentStatus(
+    sessionId: number,
+    participantUniqueId: string,
+    paid: boolean
+  ): Promise<{ sessionId: number; paymentStatus: SessionPaymentStatusMap }> {
+    const { data } = await apiClient.patch<{
+      sessionId: number;
+      paymentStatus: SessionPaymentStatusMap;
+    }>(`/sessions/history/${sessionId}/payments`, {
+      participantUniqueId,
+      paid,
+    });
+    return data;
   },
 };

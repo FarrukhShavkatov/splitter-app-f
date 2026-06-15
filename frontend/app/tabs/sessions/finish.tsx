@@ -1,8 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Share } from 'react-native';
 import { YStack, XStack, Text, Button, Circle, ScrollView } from 'tamagui';
 import { Check } from '@tamagui/lucide-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SessionActionsBar } from '@/features/sessions/ui/SessionActionsBar';
+import { buildShareTextFromFinish } from '@/features/sessions/lib/share-summary';
 import type { FinalizeTotalsByItem, FinalizeTotalsByParticipant, ReceiptAllocation } from '@/features/receipt/api/receipt.api';
 import { useReceiptSessionStore, type FinishPayload } from '@/features/receipt/model/receipt-session.store';
 import { useTranslation } from 'react-i18next';
@@ -39,6 +42,7 @@ export default function FinishScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const lastFinishPayload = useReceiptSessionStore((s) => s.lastFinishPayload);
+  const [shareBusy, setShareBusy] = useState(false);
 
   const payload = useMemo<FinishPayload | null>(() => {
     if (data) {
@@ -413,6 +417,38 @@ export default function FinishScreen() {
   const showGrandTotal = participantSummaries.length > 0 || itemSummaries.length > 0;
   const grandTotalParts = showGrandTotal ? getCurrencyParts(effectiveGrandTotal, currency) : null;
 
+  const shareLabels = useMemo(
+    () => ({
+      title: t('billFeatures.share.title', 'Receipt Splitter'),
+      total: t('billFeatures.share.total', 'Total'),
+      perPerson: t('billFeatures.share.perPerson', 'Per person'),
+      paid: t('billFeatures.share.paid', 'paid'),
+      unpaid: t('billFeatures.share.unpaid', 'unpaid'),
+      footer: t('billFeatures.share.footer', 'Shared via Receipt Splitter'),
+    }),
+    [t]
+  );
+
+  const onShare = useCallback(async () => {
+    if (!payload) return;
+    setShareBusy(true);
+    try {
+      const message = buildShareTextFromFinish(payload, shareLabels);
+      await Share.share({ message });
+    } finally {
+      setShareBusy(false);
+    }
+  }, [payload, shareLabels]);
+
+  const openHistoryDetail = useCallback(() => {
+    const sid = payload?.sessionId;
+    if (sid) {
+      router.push(`/tabs/sessions/history/${sid}`);
+    } else {
+      router.push('/tabs/sessions/history');
+    }
+  }, [payload?.sessionId, router]);
+
   const Avatar = ({ name }: { name: string }) => (
     <Circle size={32} bg="$gray5" ai="center" jc="center">
       <Text color="white" fontWeight="700" fontSize={14}>
@@ -489,6 +525,39 @@ export default function FinishScreen() {
             </XStack>
           </YStack>
         )}
+
+        {payload ? (
+          <YStack mb="$3">
+            <SessionActionsBar
+              shareLabel={t('sessions.history.share', 'Share')}
+              repeatLabel={t('sessions.history.repeat', 'Repeat bill')}
+              hint={t(
+                'sessions.finish.actionsHint',
+                'Share the result or mark payments in history.'
+              )}
+              onShare={onShare}
+              busy={shareBusy ? 'share' : null}
+            />
+            {payload.sessionId ? (
+              <Button
+                mt="$2"
+                unstyled
+                h={36}
+                borderRadius={8}
+                borderWidth={1}
+                borderColor="$gray6"
+                ai="center"
+                jc="center"
+                onPress={openHistoryDetail}
+                pressStyle={{ opacity: 0.85 }}
+              >
+                <Text fontSize={13} fontWeight="600" color="$primary">
+                  {t('sessions.finish.paymentSection', 'Payment status')} →
+                </Text>
+              </Button>
+            ) : null}
+          </YStack>
+        ) : null}
       </YStack>
 
       {/* Content */}
@@ -616,6 +685,7 @@ export default function FinishScreen() {
         right={0}
         bottom={(insets?.bottom ?? 0) + 8}
         px="$4"
+        gap="$2"
       >
         <Button
           unstyled

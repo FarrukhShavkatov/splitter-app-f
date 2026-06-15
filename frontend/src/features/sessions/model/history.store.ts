@@ -6,6 +6,7 @@ import {
   SessionHistoryEntryRaw,
   SessionHistoryResponseRaw,
   SessionHistoryPayload,
+  SessionPaymentStatusMap,
 } from '@/features/sessions/api/history.api';
 
 type State = {
@@ -25,6 +26,11 @@ type Actions = {
   /** Обновить, только если данные «протухли» */
   refreshIfStale: (maxAgeMs?: number, limit?: number, all?: boolean) => Promise<void>;
   getSession: (sessionId: string | number) => SessionHistoryEntry | undefined;
+  patchPaymentStatus: (
+    sessionId: number,
+    participantUniqueId: string,
+    paid: boolean
+  ) => Promise<void>;
   clearError: () => void;
   reset: () => void;
 };
@@ -151,6 +157,27 @@ export const useSessionsHistoryStore = create<State & Actions>((set, get) => ({
     const idNumber = typeof sessionId === 'number' ? sessionId : Number(sessionId);
     if (Number.isNaN(idNumber)) return undefined;
     return get().sessions.find(session => session.sessionId === idNumber);
+  },
+
+  async patchPaymentStatus(sessionId, participantUniqueId, paid) {
+    const result = await SessionsHistoryApi.updatePaymentStatus(
+      sessionId,
+      participantUniqueId,
+      paid
+    );
+    set((state) => ({
+      sessions: state.sessions.map((session) => {
+        if (session.sessionId !== sessionId) return session;
+        const payload = session.payload ?? ({} as SessionHistoryPayload);
+        return {
+          ...session,
+          payload: {
+            ...payload,
+            paymentStatus: result.paymentStatus,
+          },
+        };
+      }),
+    }));
   },
 
   clearError() {

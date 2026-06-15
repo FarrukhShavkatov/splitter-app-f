@@ -691,16 +691,36 @@ router.post(
         where: { id: session.creatorId },
         select: { username: true },
       });
+      const displayName = sessionName || "a bill";
       for (const pu of participantUsers) {
         if (pu.id !== session.creatorId) {
           createNotification(
             pu.id,
             "SESSION_FINALIZED",
             "Bill finalized",
-            `${creatorUser?.username ?? "Someone"} finalized "${sessionName || "a bill"}" — ${currency} ${grandTotal}`,
+            `${creatorUser?.username ?? "Someone"} finalized "${displayName}" — ${currency} ${grandTotal}`,
             { sessionId: session.id }
           );
         }
+      }
+
+      for (const p of byParticipant) {
+        const owed = round2(Number(p.amountOwed) || 0);
+        if (owed <= 0) continue;
+        const pu = participantUsers.find((u) => u.uniqueId === p.uniqueId);
+        if (!pu) continue;
+        createNotification(
+          pu.id,
+          "DEBT_REMINDER",
+          "Amount to pay",
+          `You owe ${currency} ${owed} for "${displayName}"`,
+          {
+            sessionId: session.id,
+            amountOwed: owed,
+            currency,
+            participantUniqueId: p.uniqueId,
+          }
+        );
       }
 
       return res.json(responsePayload);
@@ -800,6 +820,106 @@ router.get(
       });
     } catch (err) {
       console.error("GET /sessions/history error:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+router.patch(
+  "/history/:sessionId/payments",
+  authenticateToken,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      const requesterId = req.user.id;
+      const sessionId = Number(req.params.sessionId);
+      if (!Number.isFinite(sessionId) || sessionId <= 0) {
+        return res.status(400).json({ error: "Invalid sessionId" });
+      }
+
+      const { participantUniqueId, paid } = req.body ?? {};
+      if (
+        typeof participantUniqueId !== "string" ||
+        participantUniqueId.trim().length === 0
+      ) {
+        return res
+          .status(400)
+          .json({ error: "participantUniqueId is required" });
+      }
+      if (typeof paid !== "boolean") {
+        return res.status(400).json({ error: "paid must be a boolean" });
+      }
+
+      const userRecord = await prisma.user.findUnique({
+        where: { id: requesterId },
+        select: { uniqueId: true, username: true },
+      });
+      if (!userRecord?.uniqueId) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const entry = await prisma.sessionHistoryEntry.findUnique({
+        where: { sessionId },
+      });
+      if (!entry) {
+        return res.status(404).json({ error: "History entry not found" });
+      }
+
+      const canAccess =
+        entry.creatorId === requesterId ||
+        entry.participantUniqueIds.includes(userRecord.uniqueId);
+      if (!canAccess) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const payload =
+        (entry.payload as Record<string, unknown> | null) ?? {};
+      const existingStatus =
+        (payload.paymentStatus as Record<
+          string,
+          { paid: boolean; paidAt?: string | null }
+        >) ?? {};
+
+      const nextStatus = {
+        ...existingStatus,
+        [participantUniqueId]: {
+          paid,
+          paidAt: paid ? new Date().toISOString() : null,
+        },
+      };
+
+      const updatedPayload = {
+        ...payload,
+        paymentStatus: nextStatus,
+      };
+
+      await prisma.sessionHistoryEntry.update({
+        where: { sessionId },
+        data: { payload: updatedPayload as Prisma.JsonObject },
+      });
+
+      if (paid && entry.creatorId !== requesterId) {
+        const target = await prisma.user.findFirst({
+          where: {
+            uniqueId: participantUniqueId,
+          },
+          select: { username: true },
+        });
+        createNotification(
+          entry.creatorId,
+          "PAYMENT_MARKED",
+          "Payment marked",
+          `${target?.username ?? userRecord.username ?? "Someone"} marked paid for "${entry.sessionName ?? "a bill"}"`,
+          { sessionId, participantUniqueId }
+        );
+      }
+
+      return res.json({
+        sessionId,
+        paymentStatus: nextStatus,
+      });
+    } catch (err) {
+      console.error("PATCH /sessions/history/:sessionId/payments error:", err);
       return res.status(500).json({ error: "Server error" });
     }
   }

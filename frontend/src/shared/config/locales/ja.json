@@ -357,7 +357,10 @@
       "searchPlaceholder": "友だちを検索…",
       "noCandidates": "追加できる友だちがいません",
       "deleteConfirm": "このグループを削除しますか？",
-      "renamePlaceholder": "グループ名"
+      "renamePlaceholder": "グループ名",
+      "startBill": "グループで割り勘を始める",
+      "startBillHint": "メンバーはあらかじめ入ります。レシートをスキャンするか手入力してください。",
+      "startBillError": "グループの明細を開始できませんでした"
     }
   },
   "sessions": {
@@ -372,6 +375,16 @@
       "orders": "注文",
       "participants": "参加者 ({{count}})",
       "continue": "続ける",
+      "assignProgress": "割り当ての進捗",
+      "editBannerTitle": "品目を確認してください",
+      "editBannerHint": "スキャン後は名前・単価・数量をここで直せます。",
+      "editItem": "編集",
+      "editModalTitle": "品目を編集",
+      "itemName": "品名",
+      "unitPrice": "単価",
+      "quantity": "数量",
+      "deleteItem": "品目を削除",
+      "saveItem": "保存",
       "saving": "保存中...",
       "equalSplit": "均等割",
       "byUnits": "数量ごと",
@@ -379,7 +392,9 @@
       "all": "すべて",
       "clear": "クリア",
       "done": "完了",
-      "successTitle": "明細を保存しました"
+      "successTitle": "明細を保存しました",
+      "who": "誰？",
+      "change": "変更"
     },
     "finish": {
       "title": "明細サマリー",
@@ -390,7 +405,68 @@
       "finalize": "確定",
       "finalizing": "確定中...",
       "complete": "精算を完了",
-      "noAllocation": "割り当ての詳細がありません。"
+      "noAllocation": "割り当ての詳細がありません。",
+      "actionsHint": "結果を共有するか、履歴で支払い済みを記録できます。",
+      "markPaid": "支払い済み",
+      "markedPaid": "済み",
+      "paymentSection": "支払い状況"
+    },
+    "history": {
+      "loading": "読み込み中…",
+      "notFound": "明細が見つかりません",
+      "back": "戻る",
+      "participantsCount": "参加者 {{count}}人",
+      "noItems": "品目がありません",
+      "itemFallback": "品目",
+      "actionsHint": "友だちに共有するか、同じメンバーでもう一度割り勘できます。",
+      "repeat": "もう一度",
+      "share": "共有",
+      "markPaid": "支払い済みにする",
+      "markedPaid": "支払い済み",
+      "owed": "未払い {{amount}}"
+    }
+  },
+  "billFeatures": {
+    "share": {
+      "title": "レシートスプリッター",
+      "total": "合計",
+      "perPerson": "一人あたり",
+      "paid": "支払い済み",
+      "unpaid": "未払い",
+      "footer": "レシートスプリッターで共有"
+    },
+    "repeat": {
+      "copySuffix": "（コピー）",
+      "loading": "準備中…",
+      "error": "明細を再開できませんでした"
+    },
+    "debt": {
+      "title": "お支払い額",
+      "body": "「{{name}}」で {{amount}}"
+    },
+    "payment": {
+      "markedTitle": "支払い済みが記録されました"
+    },
+    "guide": {
+      "title": "使い方ガイド",
+      "subtitle": "レシート → 割り勘 → 共有 → 精算",
+      "open": "ガイドを見る",
+      "step1Title": "1. レシートを登録",
+      "step1Body": "ホームからスキャンするか、手入力で品目を追加します。",
+      "step2Title": "2. 品目を編集（スキャン後）",
+      "step2Body": "分割画面で各品目の「編集」から名前・単価・数量を直せます。",
+      "step3Title": "3. 割り当てて確定",
+      "step3Body": "各品目の「誰？」で参加者を選び、続けると一人あたりの金額が表示されます。",
+      "step4Title": "4. 結果を共有",
+      "step4Body": "サマリーまたは履歴の「共有」で金額をチャットに送れます。",
+      "step5Title": "5. 未払いのお知らせ",
+      "step5Body": "確定後、支払う金額が通知に届きます。",
+      "step6Title": "6. 支払い済みの記録",
+      "step6Body": "明細詳細で「支払い済みにする」をタップして記録します。",
+      "step7Title": "7. もう一度割り勘",
+      "step7Body": "「もう一度」で同じメンバー・品目から新しい明細を始められます。",
+      "step8Title": "8. グループ",
+      "step8Body": "グループ画面の「グループで割り勘」でメンバーをあらかじめ入れられます。"
     }
   },
   "inviteScan": {

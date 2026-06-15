@@ -197,6 +197,7 @@ export default function TabLayout() {
       <Tabs.Screen name="scan-receipt" options={{ href: null, title: scanReceiptTitle }} />
       <Tabs.Screen name="manual-receipt" options={{ href: null, title: t('navigation.manualReceipt', 'Manual Entry') }} />
       <Tabs.Screen name="notifications" options={{ href: null, title: t('navigation.notifications', 'Notifications') }} />
+      <Tabs.Screen name="features-guide" options={{ href: null, title: t('billFeatures.guide.title', 'How to use') }} />
       <Tabs.Screen name="sessions/participants" options={{ href: null, title: participantsTitle }} />
       <Tabs.Screen name="sessions/items-split" options={{ href: null, title: itemsSplitTitle }} />
       <Tabs.Screen name="sessions/finish" options={{ href: null, title: finishTitle }} />

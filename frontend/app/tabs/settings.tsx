@@ -1,6 +1,7 @@
 // app/tabs/settings.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
 import { YStack, Text, Separator, XStack } from 'tamagui';
 import { ThemedSafeArea } from '@/shared/ui/ThemedSafeArea';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +14,7 @@ import { changePassword, updateUsername } from '@/features/auth/api';
 import { LANGUAGE_OPTIONS, type LanguageCode } from '@/shared/config/languages';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const { user, setUser, language, setLanguage } = useAppStore();
   const { t } = useTranslation();
   const isLoggedIn = !!user;
@@ -189,6 +191,22 @@ export default function SettingsScreen() {
                     );
                   })}
                 </XStack>
+              </YStack>
+
+              <Separator />
+
+              <YStack space="$2">
+                <Text fontSize={16} fontWeight="600" color="$color">
+                  {t('billFeatures.guide.title', 'How to use')}
+                </Text>
+                <Text fontSize={14} color="$gray10" lineHeight={20}>
+                  {t('billFeatures.guide.subtitle', 'Receipt → split → share → settle')}
+                </Text>
+                <Button
+                  title={t('billFeatures.guide.open', 'Open guide')}
+                  variant="primary"
+                  onPress={() => router.push('/tabs/features-guide')}
+                />
               </YStack>
 
               <Separator />

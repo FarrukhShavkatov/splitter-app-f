@@ -4,9 +4,12 @@ import {
   YStack, XStack, Paragraph, Separator, Button, Input, Spinner, Text
 } from 'tamagui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Crown, Pencil, Trash2, Check, X as IconX, ChevronLeft, QrCode } from '@tamagui/lucide-icons';
+import { Crown, Pencil, Trash2, Check, X as IconX, ChevronLeft, QrCode, Receipt } from '@tamagui/lucide-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useGroupsStore } from '@/features/groups/model/groups.store';
+import { ReceiptApi } from '@/features/receipt/api/receipt.api';
+import { useReceiptSessionStore } from '@/features/receipt/model/receipt-session.store';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
 import UserAvatar from '@/shared/ui/UserAvatar';
 import { useAppStore } from '@/shared/lib/stores/app-store';
@@ -29,6 +32,7 @@ export default function GroupDetailsScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const gid = Number(groupId);
   const router = useRouter();
+  const { t } = useTranslation();
 
   const { current, loading, error, openGroup, renameGroup, deleteGroup, addMember, removeMember } = useGroupsStore();
   const { friends, fetchAll: fetchFriends } = useFriendsStore();
@@ -128,6 +132,42 @@ export default function GroupDetailsScreen() {
     router.push({ pathname: '/tabs/groups/invite', params: { groupId } });
   };
 
+  const startGroupBill = async () => {
+    if (!gid || !members.length) return;
+    try {
+      const created = await ReceiptApi.createSession(gid);
+      const participants = members
+        .filter((m) => m.uniqueId)
+        .map((m) => ({
+          uniqueId: m.uniqueId as string,
+          username: m.displayName || m.username || (m.uniqueId as string),
+        }));
+      useReceiptSessionStore.setState({
+        capture: undefined,
+        parsing: false,
+        parseError: undefined,
+        session: {
+          sessionId: created.id,
+          sessionName: title,
+          language: 'en',
+          summary: { grandTotal: 0, currency: 'UZS' },
+        },
+        items: [],
+        participants,
+        currency: 'UZS',
+        finalizing: false,
+        finalized: undefined,
+        lastFinishPayload: undefined,
+      });
+      router.push('/tabs/scan-receipt');
+    } catch {
+      Alert.alert(
+        t('common.error', 'Error'),
+        t('groups.details.startBillError', 'Could not start a bill for this group')
+      );
+    }
+  };
+
   if (loading && !current) return <YStack f={1} ai="center" jc="center"><Spinner /></YStack>;
   if (error) return <YStack f={1} p="$4"><Paragraph col="$red10">{error}</Paragraph></YStack>;
   if (!current) return <YStack f={1} p="$4"><Paragraph>No group</Paragraph></YStack>;
@@ -224,6 +264,30 @@ export default function GroupDetailsScreen() {
           </XStack>
         )}
       </XStack>
+
+      <Button
+        unstyled
+        h={48}
+        borderRadius={12}
+        bg="$primary"
+        ai="center"
+        jc="center"
+        onPress={startGroupBill}
+        disabled={!members.length}
+        opacity={members.length ? 1 : 0.5}
+        pressStyle={{ opacity: 0.9 }}
+        icon={<Receipt size={20} color="white" />}
+      >
+        <Text fontSize={15} fontWeight="700" color="white">
+          {t('groups.details.startBill', 'Start bill with group')}
+        </Text>
+      </Button>
+      <Text fontSize={12} color="$gray10" lineHeight={18}>
+        {t(
+          'groups.details.startBillHint',
+          'Members are pre-filled. Scan a receipt or enter items manually.'
+        )}
+      </Text>
 
       {/* INVITE ACTIONS — только QR (сканер перенесён на список групп) */}
       {canManage && (

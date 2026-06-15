@@ -4,7 +4,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pressable } from 'react-native';
 import { YStack, XStack, Text, Button, Circle, ScrollView, Spinner } from 'tamagui';
-import { Users as UsersIcon, Check, Plus, Minus, Package as PackageIcon } from '@tamagui/lucide-icons';
+import { Users as UsersIcon, Check, Plus, Minus, Package as PackageIcon, Pencil } from '@tamagui/lucide-icons';
+import Input from '@/shared/ui/Input';
 
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { useReceiptSessionStore } from '@/features/receipt/model/receipt-session.store';
@@ -268,6 +269,13 @@ export default function ItemsSplitScreen() {
   } | null;
   
   const [editing, setEditing] = useState<Editing>(null);
+  type ItemMetaEditing = {
+    id: string;
+    name: string;
+    price: string;
+    quantity: string;
+  } | null;
+  const [itemMetaEdit, setItemMetaEdit] = useState<ItemMetaEditing>(null);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
@@ -402,6 +410,47 @@ export default function ItemsSplitScreen() {
     editing?.splitMode || (editingItem?.quantity && editingItem.quantity > 1 ? 'count' : 'equal');
   const isEqualMode = effectiveMode === 'equal';
   const isCountMode = effectiveMode === 'count';
+
+  function openItemMetaModal(it: Item) {
+    setItemMetaEdit({
+      id: it.id,
+      name: it.name,
+      price: String(it.price),
+      quantity: String(it.quantity),
+    });
+  }
+
+  function closeItemMetaModal() {
+    setItemMetaEdit(null);
+  }
+
+  function saveItemMeta() {
+    if (!itemMetaEdit) return;
+    const price = Number(itemMetaEdit.price);
+    const quantity = Math.max(1, Math.floor(Number(itemMetaEdit.quantity) || 1));
+    const name = itemMetaEdit.name.trim();
+    if (!name || !Number.isFinite(price) || price < 0) return;
+
+    commitItems((prev) =>
+      prev.map((it) => {
+        if (it.id !== itemMetaEdit.id) return it;
+        return {
+          ...it,
+          name,
+          price,
+          quantity,
+          totalPrice: price * quantity,
+        };
+      })
+    );
+    closeItemMetaModal();
+  }
+
+  function deleteItemMeta() {
+    if (!itemMetaEdit) return;
+    commitItems((prev) => prev.filter((it) => it.id !== itemMetaEdit.id));
+    closeItemMetaModal();
+  }
 
   function openAssignModal(it: Item) {
     const initialMode: SplitMode = it.splitMode ?? (it.quantity > 1 ? 'count' : 'equal');
@@ -831,6 +880,25 @@ export default function ItemsSplitScreen() {
 
           {/* Items */}
           <YStack gap="$3" mt="$2">
+            <YStack
+              p="$3"
+              borderRadius={12}
+              borderWidth={1}
+              borderColor="$primary"
+              bg="rgba(46,204,113,0.08)"
+              gap="$1"
+            >
+              <Text fontSize={14} fontWeight="700" color="$primary">
+                {t('sessions.itemsSplit.editBannerTitle', 'Check items before splitting')}
+              </Text>
+              <Text fontSize={12} color="$gray10" lineHeight={18}>
+                {t(
+                  'sessions.itemsSplit.editBannerHint',
+                  'Fix names, prices, or quantities after scanning.'
+                )}
+              </Text>
+            </YStack>
+
             {items.map((it) => {
               const total =
                 typeof it.totalPrice === 'number' ? it.totalPrice : it.price * it.quantity;
@@ -903,6 +971,24 @@ export default function ItemsSplitScreen() {
                         </Text>
                       </XStack>
 
+                      <XStack gap="$2">
+                        <Button
+                          unstyled
+                          onPress={() => openItemMetaModal(it)}
+                          minHeight={29}
+                          px={10}
+                          borderRadius={5}
+                          borderWidth={1}
+                          borderColor="$gray6"
+                          bg="$backgroundPress"
+                          ai="center"
+                          jc="center"
+                          icon={<Pencil size={14} color="$gray11" />}
+                        >
+                          <Text fontSize={13} fontWeight="600" color="$gray11">
+                            {t('sessions.itemsSplit.editItem', 'Edit')}
+                          </Text>
+                        </Button>
                       <Button
                         unstyled
                         onPress={() => openAssignModal(it)}
@@ -922,9 +1008,12 @@ export default function ItemsSplitScreen() {
                           fontWeight="600"
                           color={assigned ? '$primary' : '$gray11'}
                         >
-                          {assigned ? 'Change' : 'Who?'}
+                          {assigned
+                            ? t('sessions.itemsSplit.change', 'Change')
+                            : t('sessions.itemsSplit.who', 'Who?')}
                         </Text>
                       </Button>
+                      </XStack>
                     </YStack>
                   </XStack>
                 </YStack>
@@ -946,7 +1035,7 @@ export default function ItemsSplitScreen() {
           <YStack p="$3" borderWidth={1} borderColor="$gray5" borderRadius={12} bg="$color1">
             <XStack w="100%" ai="center" jc="space-between" mb="$2">
               <Text color="$gray10" fontSize={13}>
-                Assignment progress
+                {t('sessions.itemsSplit.assignProgress', 'Assignment progress')}
               </Text>
               <Text fontSize={13} fontWeight="700">
                 {assignedCount}/{totalItems}
@@ -1197,6 +1286,90 @@ export default function ItemsSplitScreen() {
                 </Text>
               </Button>
             </XStack>
+          </YStack>
+        </YStack>
+      )}
+
+      {itemMetaEdit && (
+        <YStack
+          position="absolute"
+          inset={0}
+          bg="rgba(0,0,0,0.35)"
+          ai="center"
+          jc="center"
+          px="$4"
+        >
+          <YStack w={358} maxWidth={358} p="$4" bg="$color1" br={12} gap="$3">
+            <Text fontSize={16} fontWeight="700" color="$color">
+              {t('sessions.itemsSplit.editModalTitle', 'Edit item')}
+            </Text>
+            <YStack gap="$2">
+              <Text fontSize={12} color="$gray10">
+                {t('sessions.itemsSplit.itemName', 'Item name')}
+              </Text>
+              <Input
+                value={itemMetaEdit.name}
+                onChangeText={(name) => setItemMetaEdit((prev) => (prev ? { ...prev, name } : prev))}
+              />
+            </YStack>
+            <YStack gap="$2">
+              <Text fontSize={12} color="$gray10">
+                {t('sessions.itemsSplit.unitPrice', 'Unit price')}
+              </Text>
+              <Input
+                value={itemMetaEdit.price}
+                onChangeText={(price) => setItemMetaEdit((prev) => (prev ? { ...prev, price } : prev))}
+                keyboardType="numeric"
+              />
+            </YStack>
+            <YStack gap="$2">
+              <Text fontSize={12} color="$gray10">
+                {t('sessions.itemsSplit.quantity', 'Quantity')}
+              </Text>
+              <Input
+                value={itemMetaEdit.quantity}
+                onChangeText={(quantity) =>
+                  setItemMetaEdit((prev) => (prev ? { ...prev, quantity } : prev))
+                }
+                keyboardType="number-pad"
+              />
+            </YStack>
+            <XStack gap="$2" mt="$2">
+              <Button
+                f={1}
+                unstyled
+                h={40}
+                borderRadius={8}
+                borderWidth={1}
+                borderColor="$red8"
+                ai="center"
+                jc="center"
+                onPress={deleteItemMeta}
+              >
+                <Text fontSize={14} fontWeight="600" color="$red10">
+                  {t('sessions.itemsSplit.deleteItem', 'Remove item')}
+                </Text>
+              </Button>
+              <Button
+                f={1}
+                unstyled
+                h={40}
+                borderRadius={8}
+                bg="$primary"
+                ai="center"
+                jc="center"
+                onPress={saveItemMeta}
+              >
+                <Text fontSize={14} fontWeight="600" color="white">
+                  {t('sessions.itemsSplit.saveItem', 'Save')}
+                </Text>
+              </Button>
+            </XStack>
+            <Button unstyled onPress={closeItemMetaModal} ai="center">
+              <Text fontSize={13} color="$gray10">
+                {t('common.cancel', 'Cancel')}
+              </Text>
+            </Button>
           </YStack>
         </YStack>
       )}

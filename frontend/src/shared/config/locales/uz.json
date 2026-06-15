@@ -357,7 +357,10 @@
       "searchPlaceholder": "Do'stlarni qidirish…",
       "noCandidates": "Qo'shish uchun do'stlar yo'q",
       "deleteConfirm": "Ushbu guruhni o'chirasizmi?",
-      "renamePlaceholder": "Guruh nomi"
+      "renamePlaceholder": "Guruh nomi",
+      "startBill": "Guruh bilan hisob",
+      "startBillHint": "A'zolar oldindan qo'shiladi. Chekni skanerlang yoki qo'lda kiriting.",
+      "startBillError": "Guruh hisobini boshlab bo'lmadi"
     }
   },
   "sessions": {
@@ -372,6 +375,16 @@
       "orders": "Buyurtmalar",
       "participants": "Ishtirokchilar ({{count}})",
       "continue": "Davom etish",
+      "assignProgress": "Tayinlash jarayoni",
+      "editBannerTitle": "Bo'lishdan oldin mahsulotlarni tekshiring",
+      "editBannerHint": "Skanerlashdan keyin nom, narx yoki miqdorni tuzating.",
+      "editItem": "Tahrirlash",
+      "editModalTitle": "Mahsulotni tahrirlash",
+      "itemName": "Mahsulot nomi",
+      "unitPrice": "Birlik narxi",
+      "quantity": "Miqdor",
+      "deleteItem": "O'chirish",
+      "saveItem": "Saqlash",
       "saving": "Saqlanmoqda...",
       "equalSplit": "Teng bo'lish",
       "byUnits": "Donalar bo'yicha",
@@ -379,7 +392,9 @@
       "all": "Hammasi",
       "clear": "Tozalash",
       "done": "Tayyor",
-      "successTitle": "Hisob saqlandi"
+      "successTitle": "Hisob saqlandi",
+      "who": "Kim?",
+      "change": "O'zgartirish"
     },
     "finish": {
       "title": "Hisob xulosasi",
@@ -390,7 +405,68 @@
       "finalize": "Yakunlash",
       "finalizing": "Yakunlanmoqda...",
       "complete": "Hisobni yakunlash",
-      "noAllocation": "Taqsimot tafsilotlari mavjud emas."
+      "noAllocation": "Taqsimot tafsilotlari mavjud emas.",
+      "actionsHint": "Natijani ulashing yoki tarixda to'lovni belgilang.",
+      "markPaid": "To'langan deb belgilash",
+      "markedPaid": "To'langan",
+      "paymentSection": "To'lov holati"
+    },
+    "history": {
+      "loading": "Yuklanmoqda…",
+      "notFound": "Hisob topilmadi",
+      "back": "Orqaga",
+      "participantsCount": "{{count}} ishtirokchi",
+      "noItems": "Mahsulot biriktirilmagan",
+      "itemFallback": "Mahsulot",
+      "actionsHint": "Do'stlar bilan ulashing yoki shu hisobni takrorlang.",
+      "repeat": "Takrorlash",
+      "share": "Ulashish",
+      "markPaid": "To'langan",
+      "markedPaid": "To'langan",
+      "owed": "Qarz: {{amount}}"
+    }
+  },
+  "billFeatures": {
+    "share": {
+      "title": "Receipt Splitter",
+      "total": "Jami",
+      "perPerson": "Har bir kishi",
+      "paid": "to'langan",
+      "unpaid": "to'lanmagan",
+      "footer": "Receipt Splitter orqali ulashildi"
+    },
+    "repeat": {
+      "copySuffix": " (nusxa)",
+      "loading": "Tayyorlanmoqda…",
+      "error": "Hisobni takrorlab bo'lmadi"
+    },
+    "debt": {
+      "title": "To'lov kerak",
+      "body": "\"{{name}}\" uchun {{amount}}"
+    },
+    "payment": {
+      "markedTitle": "To'lov belgilandi"
+    },
+    "guide": {
+      "title": "Qo'llanma",
+      "subtitle": "Chek → bo'lish → ulashish → hisob",
+      "open": "Qo'llanmani ochish",
+      "step1Title": "1. Chek qo'shish",
+      "step1Body": "Bosh sahifadan skanerlang yoki qo'lda kiriting.",
+      "step2Title": "2. Mahsulotlarni tahrirlash",
+      "step2Body": "Bo'lish ekranida har bir qatordagi Tahrirlash tugmasidan foydalaning.",
+      "step3Title": "3. Tayinlash va yakunlash",
+      "step3Body": "Kim? tugmasi bilan bo'ling, keyin Davom etish.",
+      "step4Title": "4. Natijani ulashish",
+      "step4Body": "Xulosa yoki tarixda Ulashish tugmasi.",
+      "step5Title": "5. Qarz eslatmalari",
+      "step5Body": "Yakunlangach ishtirokchilarga bildirishnoma keladi.",
+      "step6Title": "6. To'langan belgisi",
+      "step6Body": "Hisob tafsilotida To'langan deb belgilang.",
+      "step7Title": "7. Takrorlash",
+      "step7Body": "Takrorlash — xuddi shu odamlar va mahsulotlar bilan yangi hisob.",
+      "step8Title": "8. Guruhlar",
+      "step8Body": "Guruhda Guruh bilan hisob — a'zolar oldindan qo'shiladi."
     }
   },
   "inviteScan": {
