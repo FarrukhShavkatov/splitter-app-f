@@ -228,7 +228,10 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
       quantity: item.quantity,
       kind: item.kind,
       splitMode: item.splitMode,
-      assignedTo: item.splitMode === 'equal' ? item.assignedTo : undefined,
+      assignedTo:
+        item.splitMode === 'equal' || item.splitMode === 'warikan'
+          ? item.assignedTo
+          : undefined,
       perPersonCount: item.splitMode === 'count' ? item.perPersonCount : undefined,
     }));
 

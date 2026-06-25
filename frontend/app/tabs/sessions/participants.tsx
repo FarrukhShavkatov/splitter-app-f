@@ -10,6 +10,7 @@ import UserAvatar from '@/shared/ui/UserAvatar';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { useGroupsStore } from '@/features/groups/model/groups.store';
 import { useReceiptSessionStore } from '@/features/receipt/model/receipt-session.store';
+import { useSessionsHistoryStore } from '@/features/sessions/model/history.store';
 import { useTranslation } from 'react-i18next';
 
 type LiteUser = { uniqueId: string; username: string; avatarUrl?: string | null };
@@ -24,6 +25,9 @@ export default function SessionParticipantsScreen() {
   const me = useAppStore(s => s.user);
   const { friends, loading: friendsLoading, error: friendsError, fetchAll: fetchFriends } = useFriendsStore();
   const { groups, counts, fetchGroups, openGroup } = useGroupsStore();
+  const historySessions = useSessionsHistoryStore((s) => s.sessions);
+  const historyInitialized = useSessionsHistoryStore((s) => s.initialized);
+  const fetchHistory = useSessionsHistoryStore((s) => s.fetchHistory);
 
   const session = useReceiptSessionStore((s) => s.session);
   const setReceiptParticipants = useReceiptSessionStore((s) => s.setParticipants);
@@ -34,6 +38,7 @@ export default function SessionParticipantsScreen() {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [activeGroupId, setActiveGroupId] = useState<number | null>(null);
   const [groupMembers, setGroupMembers] = useState<Record<number, LiteUser[]>>({});
+  const [templatePeople, setTemplatePeople] = useState<Record<string, LiteUser>>({});
   const [groupLoading, setGroupLoading] = useState<Record<number, boolean>>({});
   // авто-добавленные из активной группы (чтобы корректно снимать при переключениях)
   const [autoFromGroup, setAutoFromGroup] = useState<Record<string, number | undefined>>({});
@@ -43,6 +48,11 @@ export default function SessionParticipantsScreen() {
   // -------- boot --------
   useEffect(() => { fetchFriends(); }, [fetchFriends]);
   useEffect(() => { fetchGroups(); }, [fetchGroups]);
+  useEffect(() => {
+    if (!historyInitialized) {
+      fetchHistory(50).catch(() => {});
+    }
+  }, [fetchHistory, historyInitialized]);
 
   // robust me: берём uniqueId, иначе username, иначе id
   const meUid = useMemo(() => {
@@ -185,8 +195,50 @@ export default function SessionParticipantsScreen() {
   // candidates = Me + Friends + active group members (if any)
   const unionPeople: LiteUser[] = useMemo(() => {
     const fromGroup = activeGroupId ? (groupMembers[activeGroupId] || []) : [];
-    return dedupByUniqueId([...basePeople, ...fromGroup]);
-  }, [basePeople, activeGroupId, groupMembers]);
+    return dedupByUniqueId([...basePeople, ...fromGroup, ...Object.values(templatePeople)]);
+  }, [basePeople, activeGroupId, groupMembers, templatePeople]);
+
+  const frequentTemplates = useMemo(() => {
+    const buckets = new Map<
+      string,
+      { key: string; count: number; lastAt: number; people: LiteUser[]; sampleName: string }
+    >();
+
+    for (const entry of historySessions) {
+      const people = (entry.participants ?? [])
+        .filter((participant) => participant.uniqueId)
+        .map((participant) => ({
+          uniqueId: participant.uniqueId,
+          username: participant.username || participant.uniqueId,
+          avatarUrl: participant.avatarUrl,
+        }));
+      if (people.length < 2) continue;
+
+      const key = people
+        .map((person) => person.uniqueId)
+        .sort((a, b) => a.localeCompare(b))
+        .join('|');
+      const dateValue = new Date(entry.finalizedAt || entry.createdAt || 0).getTime() || 0;
+      const existing = buckets.get(key);
+      if (existing) {
+        existing.count += 1;
+        existing.lastAt = Math.max(existing.lastAt, dateValue);
+        continue;
+      }
+      buckets.set(key, {
+        key,
+        count: 1,
+        lastAt: dateValue,
+        people,
+        sampleName: entry.sessionName || t('sessions.participants.templateFallback', 'Recent company'),
+      });
+    }
+
+    return Array.from(buckets.values())
+      .filter((template) => template.count >= 2)
+      .sort((a, b) => b.count - a.count || b.lastAt - a.lastAt)
+      .slice(0, 3);
+  }, [historySessions, t]);
 
   const filtered = useMemo(() => {
     if (!q) return unionPeople;
@@ -206,6 +258,24 @@ export default function SessionParticipantsScreen() {
         return cp;
       }
       return prev;
+    });
+  };
+
+  const applyTemplate = (people: LiteUser[]) => {
+    setTemplatePeople((prev) => {
+      const next = { ...prev };
+      people.forEach((person) => {
+        next[person.uniqueId] = person;
+      });
+      return next;
+    });
+    setSelected((prev) => {
+      const next = { ...prev };
+      people.forEach((person) => {
+        next[person.uniqueId] = true;
+      });
+      if (meUid) next[meUid] = true;
+      return next;
     });
   };
 
@@ -293,6 +363,40 @@ export default function SessionParticipantsScreen() {
   const groupCount = (id: number) =>
     (typeof counts?.[id] === 'number' ? counts![id] : (groupMembers[id]?.length));
 
+  const TemplateChip = ({
+    name,
+    count,
+    people,
+  }: {
+    name: string;
+    count: number;
+    people: LiteUser[];
+  }) => (
+    <Button
+      unstyled
+      onPress={() => applyTemplate(people)}
+      h={32}
+      px={12}
+      borderRadius={18}
+      borderWidth={1}
+      borderColor="$gray7"
+      backgroundColor="transparent"
+      ai="center"
+      jc="center"
+      pressStyle={{ opacity: 0.85 }}
+    >
+      <XStack ai="center" gap="$1">
+        <UsersIcon size={14} color="$gray11" />
+        <Text fontSize={14} fontWeight="500" color="$gray11" numberOfLines={1}>
+          {name}
+        </Text>
+        <Text fontSize={12} color="$gray10">
+          В· {people.length} В· {count}x
+        </Text>
+      </XStack>
+    </Button>
+  );
+
   // space for fixed Next
   const bottomPad = (insets?.bottom ?? 0) + 72;
 
@@ -325,6 +429,24 @@ export default function SessionParticipantsScreen() {
       </YStack>
 
       {/* Groups */}
+      {frequentTemplates.length > 0 && (
+        <YStack gap="$2" mb="$2">
+          <Text fontSize={13} fontWeight="700" color="$gray11">
+            {t('sessions.participants.templates', 'Frequent companies')}
+          </Text>
+          <XStack flexWrap="wrap" gap="$2">
+            {frequentTemplates.map((template) => (
+              <TemplateChip
+                key={template.key}
+                name={template.sampleName}
+                count={template.count}
+                people={template.people}
+              />
+            ))}
+          </XStack>
+        </YStack>
+      )}
+
       {(groups ?? []).length > 0 && (
         <XStack flexWrap="wrap" gap="$2" mb="$2">
           {(groups ?? []).map((g: any) => (

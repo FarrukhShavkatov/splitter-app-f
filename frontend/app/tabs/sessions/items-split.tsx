@@ -17,7 +17,7 @@ import { formatCurrencyAmount, getCurrencyParts as splitCurrencyParts } from '@/
 
 // ===== Types =====
 type Participant = { uniqueId: string; username: string };
-type SplitMode = 'equal' | 'count' | undefined;
+type SplitMode = 'equal' | 'warikan' | 'count' | 'proportional' | 'excluded' | undefined;
 type Item = {
   id: string;
   name: string;
@@ -92,7 +92,12 @@ const cloneItems = (source: Item[]): Item[] =>
   }));
 
 const ensureMode = (item: Item): Exclude<SplitMode, undefined> =>
-  item.splitMode === 'count' ? 'count' : 'equal';
+  item.splitMode === 'count' ||
+  item.splitMode === 'warikan' ||
+  item.splitMode === 'proportional' ||
+  item.splitMode === 'excluded'
+    ? item.splitMode
+    : 'equal';
 
 const toLocalItems = (source: ReceiptSplitItem[]): Item[] =>
   source.map((item) => ({
@@ -118,8 +123,7 @@ const toStoreItems = (source: Item[]): ReceiptSplitItem[] =>
       return acc;
     }, {});
 
-    // Ensure assignedTo is not empty for equal mode
-    const assignedTo = mode === 'equal' ? [...(item.assignedTo || [])] : [];
+    const assignedTo = mode === 'equal' || mode === 'warikan' ? [...(item.assignedTo || [])] : [];
 
     return {
       id: item.id,
@@ -137,20 +141,138 @@ const toStoreItems = (source: Item[]): ReceiptSplitItem[] =>
 const computeItemTotal = (item: Item) =>
   typeof item.totalPrice === 'number' ? item.totalPrice : item.price * item.quantity;
 
-const buildLocalFinalization = (items: Item[], participants: Participant[]) => {
+const toMinorUnits = (amount: number) => Math.round(amount * 100);
+const fromMinorUnits = (amount: number) => Math.round(amount) / 100;
+
+const buildWarikanAllocations = (
+  warikanItems: Item[],
+  participants: Participant[],
+  organizerId?: string
+) => {
+  const participantIds = participants.map((participant) => participant.uniqueId);
+  const safeOrganizerId =
+    organizerId && participantIds.includes(organizerId) ? organizerId : participantIds[0];
+
+  if (!safeOrganizerId || participantIds.length === 0 || warikanItems.length === 0) {
+    return {
+      allocations: [] as ReceiptAllocation[],
+      participantTotals: {} as Record<string, number>,
+    };
+  }
+
+  const totalMinor = warikanItems.reduce(
+    (sum, item) => sum + toMinorUnits(computeItemTotal(item)),
+    0
+  );
+  const baseShare = Math.floor(totalMinor / participantIds.length);
+  const remainder = totalMinor - baseShare * participantIds.length;
+  const remainingTargets = new Map<string, number>();
+  participantIds.forEach((participantId) => {
+    remainingTargets.set(participantId, baseShare);
+  });
+  remainingTargets.set(
+    safeOrganizerId,
+    (remainingTargets.get(safeOrganizerId) ?? 0) + remainder
+  );
+
+  const participantTotals = participantIds.reduce<Record<string, number>>((acc, participantId) => {
+    acc[participantId] = 0;
+    return acc;
+  }, {});
+  const allocations: ReceiptAllocation[] = [];
+
+  for (const item of warikanItems) {
+    const itemTotalMinor = toMinorUnits(computeItemTotal(item));
+    let itemRemaining = itemTotalMinor;
+
+    participantIds.forEach((participantId) => {
+      if (itemRemaining <= 0) return;
+      const targetRemaining = remainingTargets.get(participantId) ?? 0;
+      if (targetRemaining <= 0) return;
+
+      const shareMinor = Math.min(targetRemaining, itemRemaining);
+      if (shareMinor <= 0) return;
+
+      remainingTargets.set(participantId, targetRemaining - shareMinor);
+      itemRemaining -= shareMinor;
+
+      const shareAmount = fromMinorUnits(shareMinor);
+      participantTotals[participantId] = (participantTotals[participantId] ?? 0) + shareAmount;
+      allocations.push({
+        itemId: item.id,
+        participantId,
+        shareAmount,
+        shareRatio: itemTotalMinor > 0 ? shareMinor / itemTotalMinor : 0,
+        splitMode: 'warikan',
+      });
+    });
+
+    if (itemRemaining > 0) {
+      const organizerRemaining = remainingTargets.get(safeOrganizerId) ?? 0;
+      remainingTargets.set(
+        safeOrganizerId,
+        Math.max(0, organizerRemaining - itemRemaining)
+      );
+      const shareAmount = fromMinorUnits(itemRemaining);
+      participantTotals[safeOrganizerId] =
+        (participantTotals[safeOrganizerId] ?? 0) + shareAmount;
+      allocations.push({
+        itemId: item.id,
+        participantId: safeOrganizerId,
+        shareAmount,
+        shareRatio: itemTotalMinor > 0 ? itemRemaining / itemTotalMinor : 0,
+        splitMode: 'warikan',
+      });
+    }
+  }
+
+  return { allocations, participantTotals };
+};
+
+const buildLocalFinalization = (
+  items: Item[],
+  participants: Participant[],
+  organizerId?: string
+) => {
   const totalsByItem: FinalizeTotalsByItem[] = [];
   const allocations: ReceiptAllocation[] = [];
+  const proportionalItems: Item[] = [];
+  const warikanItems: Item[] = [];
 
   const participantTotals = participants.reduce<Record<string, number>>((acc, participant) => {
     acc[participant.uniqueId] = 0;
     return acc;
   }, {});
 
-  for (const item of items) {
+  const addItemTotal = (item: Item, mode: Exclude<SplitMode, undefined>) => {
     const total = computeItemTotal(item);
-    totalsByItem.push({ itemId: item.id, name: item.name, total });
+    totalsByItem.push({
+      itemId: item.id,
+      name: item.name,
+      total,
+      splitMode: mode,
+      excluded: mode === 'excluded',
+    });
+    return total;
+  };
 
+  for (const item of items) {
     const mode = ensureMode(item);
+    const total = addItemTotal(item, mode);
+
+    if (mode === 'excluded') {
+      continue;
+    }
+
+    if (mode === 'proportional') {
+      proportionalItems.push(item);
+      continue;
+    }
+
+    if (mode === 'warikan') {
+      warikanItems.push(item);
+      continue;
+    }
 
     if (mode === 'count') {
       const perPersonCount = item.perPersonCount ?? {};
@@ -169,6 +291,7 @@ const buildLocalFinalization = (items: Item[], participants: Participant[]) => {
           participantId: uid,
           shareAmount,
           shareUnits: count,
+          splitMode: mode,
         });
       }
 
@@ -196,6 +319,47 @@ const buildLocalFinalization = (items: Item[], participants: Participant[]) => {
         participantId: uid,
         shareAmount,
         shareRatio,
+        splitMode: mode,
+      });
+    });
+  }
+
+  if (warikanItems.length > 0) {
+    const warikanResult = buildWarikanAllocations(warikanItems, participants, organizerId);
+    warikanResult.allocations.forEach((allocation) => {
+      allocations.push(allocation);
+      participantTotals[allocation.participantId] =
+        (participantTotals[allocation.participantId] ?? 0) + allocation.shareAmount;
+    });
+  }
+
+  for (const item of proportionalItems) {
+    const total = computeItemTotal(item);
+    const baseTotal = participants.reduce(
+      (sum, participant) => sum + (participantTotals[participant.uniqueId] ?? 0),
+      0
+    );
+    let allocated = 0;
+
+    participants.forEach((participant, index) => {
+      const ratio =
+        baseTotal > 0
+          ? (participantTotals[participant.uniqueId] ?? 0) / baseTotal
+          : 1 / Math.max(1, participants.length);
+      let shareAmount = total * ratio;
+      if (index === participants.length - 1) {
+        shareAmount = total - allocated;
+      }
+      shareAmount = Math.round(shareAmount * 100) / 100;
+      allocated = Math.round((allocated + shareAmount) * 100) / 100;
+      participantTotals[participant.uniqueId] =
+        (participantTotals[participant.uniqueId] ?? 0) + shareAmount;
+      allocations.push({
+        itemId: item.id,
+        participantId: participant.uniqueId,
+        shareAmount,
+        shareRatio: ratio,
+        splitMode: 'proportional',
       });
     });
   }
@@ -203,7 +367,7 @@ const buildLocalFinalization = (items: Item[], participants: Participant[]) => {
   const totalsByParticipant: FinalizeTotalsByParticipant[] = participants.map((participant) => ({
     uniqueId: participant.uniqueId,
     username: participant.username,
-    amountOwed: participantTotals[participant.uniqueId] ?? 0,
+    amountOwed: Math.round((participantTotals[participant.uniqueId] ?? 0) * 100) / 100,
   }));
 
   const grandTotal = totalsByItem.reduce((acc, entry) => acc + entry.total, 0);
@@ -367,14 +531,22 @@ export default function ItemsSplitScreen() {
     Object.values(it.perPersonCount || {}).reduce((a, b) => a + (b || 0), 0);
 
   const isPartiallyAssigned = (it: Item) => {
-    if (ensureMode(it) === 'count') {
+    const mode = ensureMode(it);
+    if (mode === 'excluded' || mode === 'proportional' || mode === 'warikan') {
+      return true;
+    }
+    if (mode === 'count') {
       return countAssignedUnits(it) > 0;
     }
     return (it.assignedTo?.length ?? 0) > 0;
   };
 
   const isFullyAssigned = (it: Item) => {
-    if (ensureMode(it) === 'count') {
+    const mode = ensureMode(it);
+    if (mode === 'excluded' || mode === 'proportional' || mode === 'warikan') {
+      return true;
+    }
+    if (mode === 'count') {
       const units = countAssignedUnits(it);
       const required = Math.max(1, it.quantity || 0);
       return units >= required;
@@ -393,12 +565,16 @@ export default function ItemsSplitScreen() {
     const counts = new Map<string, number>();
     participants.forEach((p) => counts.set(p.uniqueId, 0));
     items.forEach((it) => {
+      const mode = ensureMode(it);
+      if (mode === 'excluded' || mode === 'proportional') return;
       const ids =
-        ensureMode(it) === 'count'
+        mode === 'count'
           ? Object.entries(it.perPersonCount || {})
               .filter(([, count]) => (count || 0) > 0)
               .map(([uid]) => uid)
-          : it.assignedTo || [];
+          : mode === 'warikan'
+            ? participants.map((participant) => participant.uniqueId)
+            : it.assignedTo || [];
       Array.from(new Set(ids)).forEach((uid) => {
         counts.set(uid, (counts.get(uid) || 0) + 1);
       });
@@ -426,7 +602,10 @@ export default function ItemsSplitScreen() {
   const effectiveMode =
     editing?.splitMode || (editingItem?.quantity && editingItem.quantity > 1 ? 'count' : 'equal');
   const isEqualMode = effectiveMode === 'equal';
+  const isWarikanMode = effectiveMode === 'warikan';
   const isCountMode = effectiveMode === 'count';
+  const isProportionalMode = effectiveMode === 'proportional';
+  const isExcludedMode = effectiveMode === 'excluded';
 
   function openItemMetaModal(it: Item) {
     setItemMetaEdit({
@@ -471,7 +650,8 @@ export default function ItemsSplitScreen() {
 
   function openAssignModal(it: Item) {
     const initialMode: SplitMode = it.splitMode ?? (it.quantity > 1 ? 'count' : 'equal');
-    const assigned = initialMode === 'equal' ? [...(it.assignedTo || [])] : [];
+    const assigned =
+      initialMode === 'equal' || initialMode === 'warikan' ? [...(it.assignedTo || [])] : [];
     const perCount = initialMode === 'count' ? { ...(it.perPersonCount || {}) } : {};
 
     setEditing({
@@ -521,6 +701,16 @@ export default function ItemsSplitScreen() {
     });
   }
 
+  function switchToWarikan() {
+    if (!editing) return;
+    setEditing({
+      ...editing,
+      splitMode: 'warikan',
+      assignedTo: participants.map((p) => p.uniqueId),
+      perPersonCount: {},
+    });
+  }
+
   function switchToCount() {
     if (!editing || !editingItem) return;
 
@@ -554,8 +744,29 @@ export default function ItemsSplitScreen() {
     });
   }
 
+  function switchToProportional() {
+    if (!editing) return;
+    setEditing({
+      ...editing,
+      splitMode: 'proportional',
+      assignedTo: [],
+      perPersonCount: {},
+    });
+  }
+
+  function switchToExcluded() {
+    if (!editing) return;
+    setEditing({
+      ...editing,
+      splitMode: 'excluded',
+      assignedTo: [],
+      perPersonCount: {},
+    });
+  }
+
   function modalToggleUser(uid: string) {
     if (!editing || !editingItem) return;
+    if (effectiveMode === 'proportional' || effectiveMode === 'excluded' || effectiveMode === 'warikan') return;
 
     if (effectiveMode === 'count') {
       const current = editing.perPersonCount[uid] || 0;
@@ -636,7 +847,8 @@ export default function ItemsSplitScreen() {
         if (it.id !== editing.id) return it;
         
         // Ensure we preserve the assignments correctly
-        const assignedTo = mode === 'equal' ? [...(editing.assignedTo || [])] : [];
+        const assignedTo =
+          mode === 'equal' || mode === 'warikan' ? [...(editing.assignedTo || [])] : [];
         const perPersonCount = mode === 'count' ? { ...(editing.perPersonCount || {}) } : {};
         
         return {
@@ -673,7 +885,7 @@ export default function ItemsSplitScreen() {
         quantity: item.quantity,
         kind: item.kind,
         splitMode: mode,
-        assignedTo: mode === 'equal' ? (item.assignedTo || []) : undefined,
+        assignedTo: mode === 'equal' || mode === 'warikan' ? (item.assignedTo || []) : undefined,
         perPersonCount: mode === 'count' ? (item.perPersonCount || {}) : undefined,
       };
 
@@ -697,7 +909,7 @@ export default function ItemsSplitScreen() {
       throw new Error('Session ID is required');
     }
 
-      const fallbackFinalization = buildLocalFinalization(items, participants);
+      const fallbackFinalization = buildLocalFinalization(items, participants, me?.uniqueId);
 
       const result = await ReceiptApi.finalize({
       sessionId: effectiveSessionId,
@@ -920,6 +1132,25 @@ export default function ItemsSplitScreen() {
                   'After finalizing, selected participants will get a notification and this bill will appear in their history.'
                 )}
               </Text>
+              <Button
+                mt="$2"
+                size="$3"
+                alignSelf="flex-start"
+                borderRadius="$3"
+                theme="active"
+                onPress={() =>
+                  commitItems((prev) =>
+                    prev.map((item) => ({
+                      ...item,
+                      splitMode: 'warikan',
+                      assignedTo: participants.map((participant) => participant.uniqueId),
+                      perPersonCount: {},
+                    }))
+                  )
+                }
+              >
+                {t('sessions.itemsSplit.applyWarikanAll', 'Split all with Warikan')}
+              </Button>
             </YStack>
 
             <YStack
@@ -968,23 +1199,33 @@ export default function ItemsSplitScreen() {
               const total =
                 typeof it.totalPrice === 'number' ? it.totalPrice : it.price * it.quantity;
               const assigned = isPartiallyAssigned(it);
-              const singleOwner = it.splitMode !== 'count' && it.assignedTo.length === 1;
+              const mode = ensureMode(it);
+              const singleOwner = mode === 'equal' && it.assignedTo.length === 1;
               const ownerName = singleOwner
                 ? participants.find((p) => p.uniqueId === it.assignedTo[0])?.username
                 : undefined;
               const priceParts = getCurrencyParts(total);
               const assignedUnits =
-                it.splitMode === 'count'
+                mode === 'count'
                   ? countAssignedUnits(it)
                   : 0;
               const missingUnits =
-                it.splitMode === 'count'
+                mode === 'count'
                   ? Math.max(0, (it.quantity || 0) - assignedUnits)
                   : 0;
-              const isCountAndMissing = it.splitMode === 'count' && missingUnits > 0;
+              const isCountAndMissing = mode === 'count' && missingUnits > 0;
 
               let summaryText = '';
-              if (it.splitMode === 'count') {
+              if (mode === 'excluded') {
+                summaryText = t('sessions.itemsSplit.notSplit', 'Not split');
+              } else if (mode === 'warikan') {
+                summaryText = t(
+                  'sessions.itemsSplit.warikanSummary',
+                  'Warikan: equal split, remainder to organizer'
+                );
+              } else if (mode === 'proportional') {
+                summaryText = t('sessions.itemsSplit.proportional', 'Proportional');
+              } else if (mode === 'count') {
                 summaryText = t('sessions.itemsSplit.assignedUnits', {
                   assigned: assignedUnits,
                   total: it.quantity,
@@ -996,7 +1237,7 @@ export default function ItemsSplitScreen() {
                 summaryText = `1x ${fmtCurrency(it.price)}`;
               }
 
-              const showUnitIcon = it.quantity > 1 && summaryText !== '';
+              const showUnitIcon = (it.quantity > 1 || mode === 'proportional' || mode === 'excluded') && summaryText !== '';
 
               return (
                 <YStack
@@ -1180,8 +1421,8 @@ export default function ItemsSplitScreen() {
               </XStack>
             </XStack>
 
-            {editingItem && editingItem.quantity > 1 && (
-              <XStack gap="$2" mb="$2">
+            {editingItem && (
+              <XStack gap="$2" mb="$2" flexWrap="wrap">
                 <ModeToggleButton
                   label={t('sessions.itemsSplit.equalSplit', 'Equal split')}
                   icon={<UsersIcon size={16} color={isEqualMode ? 'white' : '$gray11'} />}
@@ -1189,34 +1430,56 @@ export default function ItemsSplitScreen() {
                   onPress={switchToEqual}
                 />
                 <ModeToggleButton
-                  label={t('sessions.itemsSplit.byUnits', 'By units')}
-                  icon={<PackageIcon size={16} color={isCountMode ? 'white' : '$gray11'} />}
-                  active={isCountMode}
-                  onPress={switchToCount}
+                  label={t('sessions.itemsSplit.warikan', 'Warikan')}
+                  icon={<UsersIcon size={16} color={isWarikanMode ? 'white' : '$gray11'} />}
+                  active={isWarikanMode}
+                  onPress={switchToWarikan}
+                />
+                {editingItem.quantity > 1 && (
+                  <ModeToggleButton
+                    label={t('sessions.itemsSplit.byUnits', 'By units')}
+                    icon={<PackageIcon size={16} color={isCountMode ? 'white' : '$gray11'} />}
+                    active={isCountMode}
+                    onPress={switchToCount}
+                  />
+                )}
+                <ModeToggleButton
+                  label={t('sessions.itemsSplit.proportional', 'Proportional')}
+                  icon={<PackageIcon size={16} color={isProportionalMode ? 'white' : '$gray11'} />}
+                  active={isProportionalMode}
+                  onPress={switchToProportional}
+                />
+                <ModeToggleButton
+                  label={t('sessions.itemsSplit.notSplit', 'Not split')}
+                  icon={<PackageIcon size={16} color={isExcludedMode ? 'white' : '$gray11'} />}
+                  active={isExcludedMode}
+                  onPress={switchToExcluded}
                 />
               </XStack>
             )}
 
-            <XStack w="100%" ai="center" jc="space-between" mb="$2">
-              <Text fontWeight="600" color="$color">{t('sessions.itemsSplit.assignTo', 'Assign to:')}</Text>
-              <XStack ai="center" gap="$2">
-                <Button chromeless onPress={modalAll}>
-                  <Text color="$primary" fontWeight="700">
-                    {t('sessions.itemsSplit.all', 'All')}
-                  </Text>
-                </Button>
-                <Text color="$gray8">|</Text>
-                <Button chromeless onPress={modalClear}>
-                  <Text color="$red10" fontWeight="700">
-                    {t('sessions.itemsSplit.clear', 'Clear')}
-                  </Text>
-                </Button>
-              </XStack>
-            </XStack>
+            {!isProportionalMode && !isExcludedMode && !isWarikanMode ? (
+              <>
+                <XStack w="100%" ai="center" jc="space-between" mb="$2">
+                  <Text fontWeight="600" color="$color">{t('sessions.itemsSplit.assignTo', 'Assign to:')}</Text>
+                  <XStack ai="center" gap="$2">
+                    <Button chromeless onPress={modalAll}>
+                      <Text color="$primary" fontWeight="700">
+                        {t('sessions.itemsSplit.all', 'All')}
+                      </Text>
+                    </Button>
+                    <Text color="$gray8">|</Text>
+                    <Button chromeless onPress={modalClear}>
+                      <Text color="$red10" fontWeight="700">
+                        {t('sessions.itemsSplit.clear', 'Clear')}
+                      </Text>
+                    </Button>
+                  </XStack>
+                </XStack>
 
-            <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator>
-              <YStack gap="$2" pb="$2">
-                {participants.map((p) => {
+                <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator>
+                  <YStack gap="$2" pb="$2">
+                    {participants.map((p) => {
                   const mode = effectiveMode;
                   const isCountRow = mode === 'count';
                   const assignedQty = editing.perPersonCount?.[p.uniqueId] || 0;
@@ -1301,9 +1564,25 @@ export default function ItemsSplitScreen() {
                       </XStack>
                     </Pressable>
                   );
-                })}
+                    })}
+                  </YStack>
+                </ScrollView>
+              </>
+            ) : (
+              <YStack p="$3" borderRadius={8} bg="$backgroundPress" mb="$2">
+                <Text fontSize={13} color="$gray11" lineHeight={18}>
+                  {isProportionalMode
+                    ? t(
+                        'sessions.itemsSplit.proportionalHint',
+                        'This item will be distributed by each participant subtotal from the other assigned items.'
+                      )
+                    : t(
+                        'sessions.itemsSplit.notSplitHint',
+                        'This item stays in the receipt total but is not charged to any participant.'
+                      )}
+                </Text>
               </YStack>
-            </ScrollView>
+            )}
 
             {effectiveMode === 'equal' && editing.assignedTo.length > 0 && (
               <YStack mt="$2" p={8} borderRadius={5} bg="rgba(46,204,113,0.1)">
@@ -1316,6 +1595,20 @@ export default function ItemsSplitScreen() {
                 <Text fontSize={12} color="$primary">
                   {t('sessions.itemsSplit.equalSplitHint', 'Price split equally:')}{' '}
                   {fmtCurrency(editingTotal / Math.max(1, editing.assignedTo.length))} each
+                </Text>
+              </YStack>
+            )}
+
+            {effectiveMode === 'warikan' && (
+              <YStack mt="$2" p={8} borderRadius={5} bg="rgba(46,204,113,0.1)">
+                <Text fontSize={13} fontWeight="700" color="$primary">
+                  {t('sessions.itemsSplit.warikanHintTitle', 'Strict even split')}
+                </Text>
+                <Text fontSize={12} color="$primary">
+                  {t(
+                    'sessions.itemsSplit.warikanHint',
+                    'Everyone gets the same base amount. Any remainder is assigned to the organizer.'
+                  )}
                 </Text>
               </YStack>
             )}

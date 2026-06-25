@@ -6,6 +6,8 @@ export type SessionHistoryTotalsByItem = {
   name: string;
   total: number;
   itemId: string;
+  splitMode?: 'equal' | 'count' | 'proportional' | 'excluded' | string;
+  excluded?: boolean;
 };
 
 /** Totals: по участникам */
@@ -21,6 +23,7 @@ export type SessionHistoryAllocation = {
   itemId: string;
   shareRatio: number;
   shareAmount: number;
+  splitMode?: 'equal' | 'count' | 'proportional' | 'excluded' | string;
   participantId: string; // это uniqueId участника
 };
 
@@ -29,6 +32,8 @@ export type SessionHistoryItem = {
   itemId: string;
   name: string;
   total: number;
+  splitMode?: 'equal' | 'count' | 'proportional' | 'excluded' | string;
+  excluded?: boolean;
 };
 
 export type SessionPaymentStatusEntry = {

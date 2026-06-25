@@ -41,7 +41,7 @@ export type ReceiptParticipant = {
   username: string;
 };
 
-export type ReceiptSplitMode = 'equal' | 'count';
+export type ReceiptSplitMode = 'equal' | 'warikan' | 'count' | 'proportional' | 'excluded';
 
 export interface FinalizeReceiptItemPayload {
   id: string;
@@ -72,6 +72,8 @@ export interface FinalizeTotalsByItem {
   itemId: string;
   name: string;
   total: number;
+  splitMode?: ReceiptSplitMode;
+  excluded?: boolean;
 }
 
 export interface ReceiptAllocation {
@@ -80,6 +82,7 @@ export interface ReceiptAllocation {
   shareAmount: number;
   shareUnits?: number;
   shareRatio?: number;
+  splitMode?: ReceiptSplitMode;
 }
 
 export interface FinalizeReceiptResponse {

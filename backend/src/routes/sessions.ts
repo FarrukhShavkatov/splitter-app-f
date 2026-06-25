@@ -18,6 +18,85 @@ function normalizeCurrencyCode(input: unknown): string {
   return /^[A-Z]{3}$/.test(upper) ? upper : DEFAULT_CURRENCY_CODE;
 }
 
+function toMinorUnits(amount: number) {
+  return Math.round(amount * 100);
+}
+
+function fromMinorUnits(amount: number) {
+  return Math.round(amount) / 100;
+}
+
+function distributeWarikanTargets(totalMinor: number, participantIds: string[], organizerId: string) {
+  const safeParticipantIds = participantIds.length > 0 ? participantIds : [organizerId];
+  const baseShare = Math.floor(totalMinor / safeParticipantIds.length);
+  const remainder = totalMinor - baseShare * safeParticipantIds.length;
+  const targets = new Map<string, number>();
+
+  safeParticipantIds.forEach((participantId) => {
+    targets.set(participantId, baseShare);
+  });
+  targets.set(organizerId, (targets.get(organizerId) ?? 0) + remainder);
+
+  return targets;
+}
+
+function buildWarikanAllocations(args: {
+  items: Array<{ id: string; totalMinor: number }>;
+  participantIds: string[];
+  organizerId: string;
+}) {
+  const targets = distributeWarikanTargets(
+    args.items.reduce((sum, item) => sum + item.totalMinor, 0),
+    args.participantIds,
+    args.organizerId
+  );
+  const remaining = new Map(targets);
+  const allocations: Array<{
+    itemId: string;
+    participantId: string;
+    shareAmount: number;
+    shareRatio: number;
+    splitMode: "warikan";
+  }> = [];
+
+  for (const item of args.items) {
+    let itemRemaining = item.totalMinor;
+    for (const participantId of args.participantIds) {
+      if (itemRemaining <= 0) break;
+      const participantRemaining = remaining.get(participantId) ?? 0;
+      if (participantRemaining <= 0) continue;
+
+      const shareMinor = Math.min(participantRemaining, itemRemaining);
+      if (shareMinor <= 0) continue;
+
+      remaining.set(participantId, participantRemaining - shareMinor);
+      itemRemaining -= shareMinor;
+
+      allocations.push({
+        itemId: item.id,
+        participantId,
+        shareAmount: fromMinorUnits(shareMinor),
+        shareRatio: item.totalMinor > 0 ? shareMinor / item.totalMinor : 0,
+        splitMode: "warikan",
+      });
+    }
+
+    if (itemRemaining > 0) {
+      const organizerRemaining = remaining.get(args.organizerId) ?? 0;
+      remaining.set(args.organizerId, Math.max(0, organizerRemaining - itemRemaining));
+      allocations.push({
+        itemId: item.id,
+        participantId: args.organizerId,
+        shareAmount: fromMinorUnits(itemRemaining),
+        shareRatio: item.totalMinor > 0 ? itemRemaining / item.totalMinor : 0,
+        splitMode: "warikan",
+      });
+    }
+  }
+
+  return allocations;
+}
+
 /**
  * @swagger
  * /sessions/scan:
@@ -370,7 +449,7 @@ router.patch(
  *                     price: { type: number }
  *                     quantity: { type: number }
  *                     kind: { type: string, nullable: true }
- *                     splitMode: { type: string, enum: [equal, count] }
+ *                     splitMode: { type: string, enum: [equal, warikan, count, proportional, excluded] }
  *                     perPersonCount: { type: object, additionalProperties: { type: number } }
  *                     assignedTo: { type: array, items: { type: string } }
  *     responses:
@@ -461,7 +540,7 @@ router.post(
         totalPrice?: number;
         quantity: number;
         kind?: string;
-        splitMode?: "equal" | "count";
+        splitMode?: "equal" | "warikan" | "count" | "proportional" | "excluded";
         perPersonCount?: Record<string, number>;
         assignedTo?: string[];
       }
@@ -473,6 +552,17 @@ router.post(
       for (const p of pList) participantIndex.set(p.uniqueId, p);
 
       const allocs: any[] = [];
+      const warikanItems: Array<{
+        id: string;
+        totalMinor: number;
+      }> = [];
+      const proportionalItems: Array<{
+        id: string;
+        unitPrice: number;
+        quantity: number;
+      }> = [];
+      const declaredItemTotals = new Map<string, number>();
+      const splitModeByItem = new Map<string, string>();
       // We'll derive totals AFTER generating allocations to have a single source of truth.
       const itemMeta = new Map<string, { name: string; kind?: string }>();
 
@@ -502,7 +592,7 @@ router.post(
         );
         const qty = Number(quantity);
         // infer splitMode if missing
-        let splitMode: "equal" | "count" | undefined = raw.splitMode;
+        let splitMode: "equal" | "warikan" | "count" | "proportional" | "excluded" | undefined = raw.splitMode;
         if (!splitMode) {
           if (raw.perPersonCount) splitMode = "count";
           else splitMode = "equal";
@@ -522,6 +612,25 @@ router.post(
           itemMeta.set(id, { name, kind: raw.kind });
         } else {
           itemMeta.set(id, { name });
+        }
+        declaredItemTotals.set(id, round2(unitPrice * qty));
+        splitModeByItem.set(id, splitMode);
+
+        if (splitMode === "excluded") {
+          continue;
+        }
+
+        if (splitMode === "proportional") {
+          proportionalItems.push({ id, unitPrice, quantity: qty });
+          continue;
+        }
+
+        if (splitMode === "warikan") {
+          warikanItems.push({
+            id,
+            totalMinor: toMinorUnits(unitPrice * qty),
+          });
+          continue;
         }
 
         if (splitMode === "count") {
@@ -554,6 +663,7 @@ router.post(
               participantId: pid,
               shareUnits: u,
               shareAmount,
+              splitMode,
             });
             // participant totals will be derived later
           }
@@ -585,6 +695,7 @@ router.post(
               participantId: pid,
               shareRatio: ratio,
               shareAmount,
+              splitMode,
             });
             // participant totals will be derived later
           });
@@ -595,22 +706,94 @@ router.post(
         }
       }
 
+      const organizerRecord = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { uniqueId: true },
+      });
+      const organizerUniqueId =
+        organizerRecord?.uniqueId && participantIndex.has(organizerRecord.uniqueId)
+          ? organizerRecord.uniqueId
+          : pList[0]?.uniqueId;
+
+      if (!organizerUniqueId) {
+        return res.status(400).json({ error: "Organizer must be included in participants" });
+      }
+
+      if (warikanItems.length > 0) {
+        allocs.push(
+          ...buildWarikanAllocations({
+            items: warikanItems,
+            participantIds: pList.map((participant) => participant.uniqueId),
+            organizerId: organizerUniqueId,
+          })
+        );
+      }
+
+      if (proportionalItems.length > 0) {
+        const baseTotals = new Map<string, number>();
+        for (const a of allocs) {
+          const pid = a.participantId;
+          baseTotals.set(pid, round2((baseTotals.get(pid) || 0) + (Number(a.shareAmount) || 0)));
+        }
+        const baseGrandTotal = Array.from(baseTotals.values()).reduce((sum, value) => sum + value, 0);
+
+        for (const item of proportionalItems) {
+          const itemTotal = round2(item.unitPrice * item.quantity);
+          let allocated = 0;
+          pList.forEach((participant, idx) => {
+            const ratio =
+              baseGrandTotal > 0
+                ? (baseTotals.get(participant.uniqueId) || 0) / baseGrandTotal
+                : 1 / Math.max(1, pList.length);
+            let shareAmount = itemTotal * ratio;
+            if (idx === pList.length - 1) {
+              shareAmount = itemTotal - allocated;
+            }
+            shareAmount = round2(shareAmount);
+            allocated = round2(allocated + shareAmount);
+            allocs.push({
+              itemId: item.id,
+              participantId: participant.uniqueId,
+              shareRatio: ratio,
+              shareAmount,
+              splitMode: "proportional",
+            });
+          });
+        }
+      }
+
       // Derive totals from allocations
       const byItemMap = new Map<
         string,
-        { itemId: string; name: string; total: number; kind?: string }
+        { itemId: string; name: string; total: number; kind?: string; splitMode?: string; excluded?: boolean }
       >();
+      for (const [itemId, total] of declaredItemTotals) {
+        const meta = itemMeta.get(itemId);
+        const splitMode = splitModeByItem.get(itemId);
+        if (splitMode === "excluded") {
+          byItemMap.set(itemId, {
+            itemId,
+            name: meta?.name || itemId,
+            total,
+            ...(meta?.kind ? { kind: meta.kind } : {}),
+            splitMode,
+            excluded: true,
+          });
+        }
+      }
       const byParticipantTotals = new Map<string, number>();
       for (const a of allocs) {
         const itemId = a.itemId;
         const shareAmount = Number(a.shareAmount) || 0;
         if (!byItemMap.has(itemId)) {
           const meta = itemMeta.get(itemId);
+          const itemSplitMode = splitModeByItem.get(itemId);
           byItemMap.set(itemId, {
             itemId,
             name: meta?.name || itemId,
             total: 0,
             ...(meta?.kind ? { kind: meta.kind } : {}),
+            ...(itemSplitMode ? { splitMode: itemSplitMode } : {}),
           });
         }
         const entry = byItemMap.get(itemId)!;
