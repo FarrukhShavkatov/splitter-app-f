@@ -20,6 +20,7 @@ interface NotificationsStore {
   fetchUnreadCount: () => Promise<void>;
   markAsRead: (ids?: number[]) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  removeFriendRequestNotifications: (requesterId: number, notificationId?: number) => void;
 }
 
 export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
@@ -76,5 +77,32 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
     } catch (err) {
       console.error('markAllAsRead error:', err);
     }
+  },
+
+  removeFriendRequestNotifications: (requesterId, notificationId) => {
+    set((state) => {
+      const idsToRemove = new Set<number>();
+      if (notificationId) idsToRemove.add(notificationId);
+      state.notifications.forEach((notification) => {
+        if (
+          notification.type === 'FRIEND_REQUEST' &&
+          Number(notification.meta?.requesterId) === requesterId
+        ) {
+          idsToRemove.add(notification.id);
+        }
+      });
+      if (idsToRemove.size === 0) return state;
+
+      const unreadRemoved = state.notifications.filter(
+        (notification) => idsToRemove.has(notification.id) && !notification.read
+      ).length;
+
+      return {
+        notifications: state.notifications.filter(
+          (notification) => !idsToRemove.has(notification.id)
+        ),
+        unreadCount: Math.max(0, state.unreadCount - unreadRemoved),
+      };
+    });
   },
 }));

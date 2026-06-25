@@ -8,11 +8,10 @@ import { YStack, XStack, Button, Paragraph } from 'tamagui';
 import { ChevronLeft } from '@tamagui/lucide-icons';
 
 import { parseInviteFromScan } from '@/shared/lib/utils/invite';
-import { FriendsApi } from '@/features/friends/api/friends.api';
 import { GroupsApi } from '@/features/groups/api/groups.api';
 import { useTranslation } from 'react-i18next';
 
-type FromParam = 'friends-requests' | 'groups-index' | undefined;
+type FromParam = 'groups-index' | undefined;
 
 interface UserData {
   avatar?: string;
@@ -64,8 +63,7 @@ export default function ScanInviteScreen() {
   }, [status, fadeAnim, scaleAnim]);
 
   const goBack = () => {
-    if (from === 'friends-requests') router.replace('/tabs/friends/requests' as never);
-    else if (from === 'groups-index') router.replace('/tabs/groups' as never);
+    if (from === 'groups-index') router.replace('/tabs/groups' as never);
     else router.back();
   };
 
@@ -73,13 +71,11 @@ export default function ScanInviteScreen() {
     try {
       const parsed = parseInviteFromScan(data);
       if (!parsed) throw new Error('not-our-qr');
+      if (parsed.kind === 'friend') throw new Error('friend-qr-disabled');
 
       setStatus('loading');
-      
-      const response =
-        parsed.kind === 'friend'
-          ? await FriendsApi.joinByToken(parsed.token)
-          : await GroupsApi.joinByToken(parsed.token);
+
+      const response = await GroupsApi.joinByToken(parsed.token);
 
       // API helpers already return response.data (not axios response object).
       const payload = (response ?? {}) as Record<string, any>;
@@ -91,15 +87,9 @@ export default function ScanInviteScreen() {
         payload.to ??
         null;
 
-      const fallbackName =
-        parsed.kind === 'group'
-          ? t('inviteScan.groupAccepted', 'Group invite accepted')
-          : t('inviteScan.friendAccepted', 'Friend invite accepted');
-      const fallbackUsername = parsed.kind === 'group' ? '@group' : '@friend';
-      const actionText =
-        parsed.kind === 'group'
-          ? payload.member ?? payload.joined ?? 'joined'
-          : payload.action ?? 'accepted';
+      const fallbackName = t('inviteScan.groupAccepted', 'Group invite accepted');
+      const fallbackUsername = '@group';
+      const actionText = payload.member ?? payload.joined ?? 'joined';
 
       setUserData({
         avatar: userLike?.avatarUrl ?? userLike?.avatar ?? userLike?.photo,

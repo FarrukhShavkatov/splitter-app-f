@@ -12,6 +12,12 @@ import type {
   ReceiptAllocation,
 } from '@/features/receipt/api/receipt.api';
 import { ReceiptApi } from '@/features/receipt/api/receipt.api';
+import { useAppStore } from '@/shared/lib/stores/app-store';
+import {
+  DEFAULT_CURRENCY,
+  normalizeCurrencyCode,
+  normalizeSelectableCurrency,
+} from '@/shared/lib/currency';
 
 export type CapturedReceiptImage = {
   uri?: string;
@@ -92,7 +98,7 @@ const INITIAL_STATE: Pick<ReceiptSessionStore,
   session: undefined,
   items: [],
   participants: [],
-  currency: 'UZS', // ✅ Значение по умолчанию
+  currency: DEFAULT_CURRENCY,
   finalizing: false,
   finalizeError: undefined,
   finalized: undefined,
@@ -114,7 +120,7 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
 
   setParticipants: (participants) => set({ participants }),
 
-  setCurrency: (currency) => set({ currency }), // ✅ Новый метод
+  setCurrency: (currency) => set({ currency: normalizeCurrencyCode(currency) }),
 
   updateItem: (itemId, updater) => {
     set((state) => ({
@@ -141,8 +147,12 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
         perPersonCount: {},
       }));
 
-      // ✅ Извлекаем валюту из ответа API
-      const detectedCurrency = response.summary?.currency || 'UZS';
+      const preferredCurrency = useAppStore.getState().currency;
+      const rawDetectedCurrency = response.summary?.currency;
+      const detectedCurrency =
+        rawDetectedCurrency && rawDetectedCurrency !== 'UNKNOWN'
+          ? normalizeCurrencyCode(rawDetectedCurrency, preferredCurrency)
+          : preferredCurrency;
 
       set({
         parsing: false,
@@ -155,7 +165,7 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
         },
         items: splitItems,
         participants: [],
-        currency: detectedCurrency, // ✅ Сохраняем валюту
+        currency: detectedCurrency,
         finalized: undefined,
         finalizeError: undefined,
       });
@@ -172,6 +182,7 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
   createManualSession: async (sessionName, currency, rawItems) => {
     set({ parsing: true, parseError: undefined });
     try {
+      const selectedCurrency = normalizeSelectableCurrency(currency);
       const created = await ReceiptApi.createSession();
       const splitItems: ReceiptSplitItem[] = rawItems.map((item) => ({
         ...item,
@@ -189,11 +200,11 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
           sessionId: created.id,
           sessionName,
           language: 'en',
-          summary: { grandTotal, currency },
+          summary: { grandTotal, currency: selectedCurrency },
         },
         items: splitItems,
         participants: [],
-        currency,
+        currency: selectedCurrency,
         finalized: undefined,
         finalizeError: undefined,
       });
@@ -206,6 +217,7 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
 
   finalizeSession: async () => {
     const { session, participants, items, currency } = get();
+    const finalCurrency = normalizeCurrencyCode(currency);
     if (!session) throw new Error('No session to finalize');
     if (participants.length === 0) throw new Error('Add at least one participant');
 
@@ -227,7 +239,7 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
         sessionName: session.sessionName,
         participants,
         items: payloadItems,
-        currency,
+        currency: finalCurrency,
       });
 
       const nextState: Partial<ReceiptSessionStore> = {
@@ -242,7 +254,7 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
           totalsByItem: response.totals?.byItem,
           allocations: response.allocations,
           grandTotal: response.totals?.grandTotal,
-          currency: response.totals?.currency ?? currency,
+          currency: response.totals?.currency ?? finalCurrency,
           status: response.status,
           createdAt: response.createdAt,
         },

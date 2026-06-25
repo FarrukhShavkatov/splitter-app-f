@@ -13,6 +13,7 @@ import type { FinishPayload, ReceiptSplitItem } from '@/features/receipt/model/r
 import { ReceiptApi } from '@/features/receipt/api/receipt.api';
 import { useTranslation } from 'react-i18next';
 import type { FinalizeReceiptItemPayload, FinalizeTotalsByItem, FinalizeTotalsByParticipant, ReceiptAllocation } from '@/features/receipt/api/receipt.api';
+import { formatCurrencyAmount, getCurrencyParts as splitCurrencyParts } from '@/shared/lib/currency';
 
 // ===== Types =====
 type Participant = { uniqueId: string; username: string };
@@ -249,15 +250,12 @@ export default function ItemsSplitScreen() {
   const storeCurrency = useReceiptSessionStore((s) => s.currency);
 
   const fmtCurrency = useCallback((n: number) => {
-    const currency = storeCurrency || 'UZS';
-    return `${currency} ${Math.round(n).toLocaleString('en-US')}`;
+    return formatCurrencyAmount(n, storeCurrency);
   }, [storeCurrency]);
 
   const getCurrencyParts = useCallback((n: number) => {
-    const formatted = fmtCurrency(n);
-    const [currency, ...rest] = formatted.split(' ');
-    return { currency, amount: rest.join(' ') || '0' };
-  }, [fmtCurrency]);
+    return splitCurrencyParts(n, storeCurrency);
+  }, [storeCurrency]);
 
   const [items, setLocalItems] = useState<Item[]>([]);
 
@@ -391,6 +389,25 @@ export default function ItemsSplitScreen() {
 
   const totalItems = items.length;
   const canContinue = assignedCount === totalItems && totalItems > 0;
+  const participantAssignmentCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    participants.forEach((p) => counts.set(p.uniqueId, 0));
+    items.forEach((it) => {
+      const ids =
+        ensureMode(it) === 'count'
+          ? Object.entries(it.perPersonCount || {})
+              .filter(([, count]) => (count || 0) > 0)
+              .map(([uid]) => uid)
+          : it.assignedTo || [];
+      Array.from(new Set(ids)).forEach((uid) => {
+        counts.set(uid, (counts.get(uid) || 0) + 1);
+      });
+    });
+    return participants.map((p) => ({
+      ...p,
+      count: counts.get(p.uniqueId) || 0,
+    }));
+  }, [items, participants]);
 
   useEffect(() => {
     if (!canContinue && submitError) {
@@ -897,6 +914,54 @@ export default function ItemsSplitScreen() {
                   'Fix names, prices, or quantities after scanning.'
                 )}
               </Text>
+              <Text fontSize={12} color="$gray10" lineHeight={18}>
+                {t(
+                  'sessions.itemsSplit.finalizeHint',
+                  'After finalizing, selected participants will get a notification and this bill will appear in their history.'
+                )}
+              </Text>
+            </YStack>
+
+            <YStack
+              p="$3"
+              borderRadius={12}
+              borderWidth={1}
+              borderColor="$gray5"
+              bg="$color1"
+              gap="$2"
+            >
+              <Text fontSize={13} fontWeight="700" color="$color">
+                {t('sessions.itemsSplit.participantStatus', 'Participant status')}
+              </Text>
+              <XStack flexWrap="wrap" gap="$2">
+                {participantAssignmentCounts.map((participant) => {
+                  const active = participant.count > 0;
+                  return (
+                    <XStack
+                      key={`status-${participant.uniqueId}`}
+                      ai="center"
+                      gap="$1"
+                      px="$2"
+                      py="$1"
+                      borderRadius={16}
+                      bg={active ? 'rgba(46,204,113,0.1)' : '$backgroundPress'}
+                    >
+                      <Text
+                        fontSize={12}
+                        fontWeight="600"
+                        color={active ? '$primary' : '$gray10'}
+                      >
+                        {participant.username}
+                      </Text>
+                      <Text fontSize={11} color={active ? '$primary' : '$gray10'}>
+                        {active
+                          ? t('sessions.itemsSplit.assignedState', 'Assigned')
+                          : t('sessions.itemsSplit.unassignedState', 'Unassigned')}
+                      </Text>
+                    </XStack>
+                  );
+                })}
+              </XStack>
             </YStack>
 
             {items.map((it) => {
@@ -920,7 +985,11 @@ export default function ItemsSplitScreen() {
 
               let summaryText = '';
               if (it.splitMode === 'count') {
-                summaryText = `${assignedUnits}/${it.quantity} assigned`;
+                summaryText = t('sessions.itemsSplit.assignedUnits', {
+                  assigned: assignedUnits,
+                  total: it.quantity,
+                  defaultValue: '{{assigned}}/{{total}} assigned',
+                });
               } else if (singleOwner) {
                 summaryText = ownerName ?? '';
               } else if (it.quantity > 1) {
@@ -956,7 +1025,13 @@ export default function ItemsSplitScreen() {
                       )}
                       {isCountAndMissing && (
                         <Text fontSize={12} color="$red10">
-                          Assign remaining {missingUnits} unit{missingUnits === 1 ? '' : 's'}
+                          {t('sessions.itemsSplit.remainingUnits', {
+                            count: missingUnits,
+                            defaultValue:
+                              missingUnits === 1
+                                ? 'Assign 1 remaining unit'
+                                : `Assign ${missingUnits} remaining units`,
+                          })}
                         </Text>
                       )}
                     </YStack>
@@ -1233,10 +1308,13 @@ export default function ItemsSplitScreen() {
             {effectiveMode === 'equal' && editing.assignedTo.length > 0 && (
               <YStack mt="$2" p={8} borderRadius={5} bg="rgba(46,204,113,0.1)">
                 <Text fontSize={13} fontWeight="700" color="$primary">
-                  Assigned to {editing.assignedTo.length} participant(s)
+                  {t('sessions.itemsSplit.equalAssigned', {
+                    count: editing.assignedTo.length,
+                    defaultValue: 'Assigned to {{count}} participant(s)',
+                  })}
                 </Text>
                 <Text fontSize={12} color="$primary">
-                  Price split equally:{' '}
+                  {t('sessions.itemsSplit.equalSplitHint', 'Price split equally:')}{' '}
                   {fmtCurrency(editingTotal / Math.max(1, editing.assignedTo.length))} each
                 </Text>
               </YStack>
@@ -1246,11 +1324,13 @@ export default function ItemsSplitScreen() {
               Object.values(editing.perPersonCount).reduce((a, b) => a + (b || 0), 0) > 0 && (
                 <YStack mt="$2" p={8} borderRadius={5} bg="rgba(46,204,113,0.1)">
                   <Text fontSize={13} fontWeight="700" color="$primary">
-                    {Object.values(editing.perPersonCount).reduce((a, b) => a + (b || 0), 0)}{' '}
-                    unit(s) assigned
+                    {t('sessions.itemsSplit.countAssigned', {
+                      count: Object.values(editing.perPersonCount).reduce((a, b) => a + (b || 0), 0),
+                      defaultValue: '{{count}} unit(s) assigned',
+                    })}
                   </Text>
                   <Text fontSize={12} color="$primary">
-                    Per unit: {fmtCurrency(editingItem?.price || 0)}
+                    {t('sessions.itemsSplit.perUnit', 'Per unit:')} {fmtCurrency(editingItem?.price || 0)}
                   </Text>
                 </YStack>
               )}
@@ -1267,7 +1347,7 @@ export default function ItemsSplitScreen() {
                 ai="center"
                 jc="center"
               >
-                <Text>Cancel</Text>
+                <Text>{t('common.cancel', 'Cancel')}</Text>
               </Button>
               <Button
                 unstyled
@@ -1282,7 +1362,7 @@ export default function ItemsSplitScreen() {
                 pressStyle={{ opacity: 0.9 }}
               >
                 <Text color="white" fontWeight="600">
-                  Save
+                  {t('sessions.itemsSplit.saveItem', 'Save')}
                 </Text>
               </Button>
             </XStack>

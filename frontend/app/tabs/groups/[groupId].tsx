@@ -37,6 +37,7 @@ export default function GroupDetailsScreen() {
   const { current, loading, error, openGroup, renameGroup, deleteGroup, addMember, removeMember } = useGroupsStore();
   const { friends, fetchAll: fetchFriends } = useFriendsStore();
   const me = useAppStore(s => s.user);
+  const preferredCurrency = useAppStore(s => s.currency);
 
   const [editing, setEditing] = useState(false);
   const [newName, setNewName] = useState('');
@@ -150,11 +151,11 @@ export default function GroupDetailsScreen() {
           sessionId: created.id,
           sessionName: title,
           language: 'en',
-          summary: { grandTotal: 0, currency: 'UZS' },
+          summary: { grandTotal: 0, currency: preferredCurrency },
         },
         items: [],
         participants,
-        currency: 'UZS',
+        currency: preferredCurrency,
         finalizing: false,
         finalized: undefined,
         lastFinishPayload: undefined,

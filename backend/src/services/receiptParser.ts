@@ -77,6 +77,14 @@ const SYMBOL_TO_ISO: Record<string, string> = {
   $: "USD",
   USD: "USD",
   US$: "USD",
+  UZS: "UZS",
+  SUM: "UZS",
+  SOM: "UZS",
+  "SO'M": "UZS",
+  "SOʻM": "UZS",
+  "SO’M": "UZS",
+  СУМ: "UZS",
+  СЎМ: "UZS",
   "€": "EUR",
   EUR: "EUR",
   "£": "GBP",
@@ -166,7 +174,7 @@ Rules:
 - totalPrice = unitPrice * quantity (round to 2 decimals).
 - Include service/tips/fees as separate items with kind set.
 - If currency symbol present ignore it when recording numbers.
-- Detect the receipt currency (e.g. symbols like $, €, ₽ or textual names) and report the ISO 4217 code in uppercase.
+- Detect the receipt currency (e.g. symbols/text like $, €, ₽, ¥, ₹, so'm, sum) and report the ISO 4217 code in uppercase.
 - When unsure about currency, return "UNKNOWN".
 - grandTotal = sum of item totalPrice values (after any discounts).`;
 
@@ -250,7 +258,7 @@ function mockParse(): ParseResult {
   const grandTotal = items.reduce((s, i) => s + i.totalPrice, 0);
   return {
     items,
-    summary: { grandTotal, currency: "RUB" },
+    summary: { grandTotal, currency: "UZS" },
     source: "mock",
   };
 }

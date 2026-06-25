@@ -692,14 +692,28 @@ router.post(
         select: { username: true },
       });
       const displayName = sessionName || "a bill";
+      const owedByParticipant = new Map(
+        byParticipant.map((participant) => [
+          participant.uniqueId,
+          round2(Number(participant.amountOwed) || 0),
+        ])
+      );
       for (const pu of participantUsers) {
         if (pu.id !== session.creatorId) {
+          const owed = owedByParticipant.get(pu.uniqueId) || 0;
+          if (owed > 0) continue;
           createNotification(
             pu.id,
             "SESSION_FINALIZED",
             "Bill finalized",
             `${creatorUser?.username ?? "Someone"} finalized "${displayName}" — ${currency} ${grandTotal}`,
-            { sessionId: session.id }
+            {
+              sessionId: session.id,
+              sessionName: displayName,
+              currency,
+              grandTotal,
+              creatorUsername: creatorUser?.username ?? "Someone",
+            }
           );
         }
       }
@@ -716,6 +730,7 @@ router.post(
           `You owe ${currency} ${owed} for "${displayName}"`,
           {
             sessionId: session.id,
+            sessionName: displayName,
             amountOwed: owed,
             currency,
             participantUniqueId: p.uniqueId,
@@ -910,7 +925,13 @@ router.patch(
           "PAYMENT_MARKED",
           "Payment marked",
           `${target?.username ?? userRecord.username ?? "Someone"} marked paid for "${entry.sessionName ?? "a bill"}"`,
-          { sessionId, participantUniqueId }
+          {
+            sessionId,
+            sessionName: entry.sessionName ?? "a bill",
+            participantUniqueId,
+            participantUsername:
+              target?.username ?? userRecord.username ?? "Someone",
+          }
         );
       }
 

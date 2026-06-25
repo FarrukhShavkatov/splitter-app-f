@@ -124,7 +124,7 @@ export default function TabLayout() {
   useEffect(() => {
     const poll = () => useNotificationsStore.getState().fetchUnreadCount();
     poll();
-    const interval = setInterval(poll, 60_000);
+    const interval = setInterval(poll, 20_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -136,7 +136,6 @@ export default function TabLayout() {
   const newGroupTitle = t('navigation.groups.create', 'New group');
   const groupDetailsTitle = t('navigation.groups.details', 'Group');
   const scanInviteTitle = t('navigation.scanInvite', 'Scan Invite');
-  const friendQrTitle = t('navigation.friendQr', 'My Friend QR');
   const groupQrTitle = t('navigation.groupQr', 'Group QR');
   const scanReceiptTitle = t('navigation.scanReceipt', 'Scan Receipt');
   const participantsTitle = t('navigation.participants', 'Participants');
@@ -191,7 +190,6 @@ export default function TabLayout() {
       <Tabs.Screen name="groups/[groupId]" options={{ href: null, title: groupDetailsTitle }} />
 
       <Tabs.Screen name="scan-invite" options={{ href: null, title: scanInviteTitle }} />
-      <Tabs.Screen name="friends/invite" options={{ href: null, title: friendQrTitle }} />
       <Tabs.Screen name="groups/invite" options={{ href: null, title: groupQrTitle }} />
 
       <Tabs.Screen name="scan-receipt" options={{ href: null, title: scanReceiptTitle }} />

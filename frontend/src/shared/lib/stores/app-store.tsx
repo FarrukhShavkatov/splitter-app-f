@@ -5,6 +5,11 @@ import { getCurrentUser } from '@/features/auth/api';
 import { getToken, removeToken } from '../utils/token-storage';
 import type { LanguageCode } from '@/shared/config/languages';
 import { DEFAULT_LANGUAGE } from '@/shared/config/languages';
+import {
+  DEFAULT_CURRENCY,
+  normalizeSelectableCurrency,
+  type SelectableCurrencyCode,
+} from '@/shared/lib/currency';
 
 export interface User {
   id: number;
@@ -24,6 +29,7 @@ interface AppStore {
   // App settings
   theme: 'light' | 'dark' | 'system';
   language: LanguageCode;
+  currency: SelectableCurrencyCode;
   
   // Actions
   setToken: (token: string) => void;
@@ -33,6 +39,7 @@ interface AppStore {
   initializeAuth: () => Promise<void>;
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   setLanguage: (language: LanguageCode) => void;
+  setCurrency: (currency: SelectableCurrencyCode) => void;
 }
 
 export const useAppStore = create<AppStore>()(
@@ -44,6 +51,7 @@ export const useAppStore = create<AppStore>()(
       isLoading: false,
       theme: 'light',
       language: DEFAULT_LANGUAGE,
+      currency: DEFAULT_CURRENCY,
 
       // Auth actions
       setToken: (token: string) => {
@@ -101,6 +109,7 @@ export const useAppStore = create<AppStore>()(
       // App settings actions
       setTheme: (theme) => set({ theme }),
       setLanguage: (language) => set({ language }),
+      setCurrency: (currency) => set({ currency: normalizeSelectableCurrency(currency) }),
     }),
     {
       name: 'app-store',
@@ -108,6 +117,7 @@ export const useAppStore = create<AppStore>()(
       partialize: (state) => ({
         theme: state.theme,
         language: state.language,
+        currency: normalizeSelectableCurrency(state.currency),
         // Не сохраняем токен и пользователя в AsyncStorage, 
         // так как токен сохраняется отдельно в SecureStore
       }),

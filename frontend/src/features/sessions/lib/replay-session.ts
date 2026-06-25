@@ -2,6 +2,7 @@ import { ReceiptApi } from '@/features/receipt/api/receipt.api';
 import type { ReceiptSplitItem } from '@/features/receipt/model/receipt-session.store';
 import { useReceiptSessionStore } from '@/features/receipt/model/receipt-session.store';
 import type { SessionHistoryEntry } from '@/features/sessions/api/history.api';
+import { DEFAULT_CURRENCY } from '@/shared/lib/currency';
 
 export async function replaySessionFromHistory(
   entry: SessionHistoryEntry,
@@ -13,7 +14,7 @@ export async function replaySessionFromHistory(
   const byParticipant =
     entry.totals?.byParticipant ?? entry.payload?.totals?.byParticipant ?? [];
   const currency =
-    entry.currency ?? entry.totals?.currency ?? entry.payload?.totals?.currency ?? 'UZS';
+    entry.currency ?? entry.totals?.currency ?? entry.payload?.totals?.currency ?? DEFAULT_CURRENCY;
   const grandTotal =
     entry.grandTotal ?? entry.totals?.grandTotal ?? entry.payload?.totals?.grandTotal ?? 0;
   const suffix = options?.sessionNameSuffix ?? '';

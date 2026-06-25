@@ -2,16 +2,18 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Share, Alert } from 'react-native';
 import { YStack, XStack, Text, ScrollView, Button, Spinner } from 'tamagui';
-import { Check, ChevronLeft } from '@tamagui/lucide-icons';
+import { Check, ChevronLeft, FileDown } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
 
 import UserAvatar from '@/shared/ui/UserAvatar';
 import { useSessionsHistoryStore } from '@/features/sessions/model/history.store';
 import { SessionActionsBar } from '@/features/sessions/ui/SessionActionsBar';
+import { ExportHistoryModal } from '@/features/sessions/ui/ExportHistoryModal';
 import {
   buildShareTextFromHistory,
 } from '@/features/sessions/lib/share-summary';
 import { replaySessionFromHistory } from '@/features/sessions/lib/replay-session';
+import { DEFAULT_CURRENCY, formatCurrencyAmount } from '@/shared/lib/currency';
 import type {
   SessionHistoryEntry,
   SessionHistoryAllocation,
@@ -20,9 +22,8 @@ import type {
   SessionPaymentStatusMap,
 } from '@/features/sessions/api/history.api';
 
-const DEFAULT_CURRENCY = 'UZS';
 const fmtCurrency = (value: number, currency: string) =>
-  `${currency} ${value.toLocaleString('en-US')}`;
+  formatCurrencyAmount(value, currency);
 const BULLET = '\u2022';
 const DETAIL_LIMIT = 50;
 
@@ -116,6 +117,7 @@ export default function HistoryDetailsScreen() {
 
   const [busy, setBusy] = useState<'share' | 'repeat' | null>(null);
   const [paymentBusyId, setPaymentBusyId] = useState<string | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const bill: SessionHistoryEntry | undefined = useMemo(() => {
     if (!historyId) return undefined;
@@ -239,7 +241,7 @@ export default function HistoryDetailsScreen() {
   }
 
   return (
-    <YStack f={1} bg="$background" px="$4" pt="$4" pb="$4">
+    <YStack f={1} bg="$background" px="$4" pt="$4" pb="$4" position="relative">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ alignItems: 'center', paddingBottom: 32, gap: 16 }}
@@ -282,6 +284,26 @@ export default function HistoryDetailsScreen() {
             onRepeat={onRepeat}
             busy={busy}
           />
+
+          <Button
+            unstyled
+            h={40}
+            borderRadius={10}
+            borderWidth={1}
+            borderColor="$gray6"
+            bg="$backgroundPress"
+            ai="center"
+            jc="center"
+            onPress={() => setExportOpen(true)}
+            pressStyle={{ opacity: 0.9 }}
+          >
+            <XStack ai="center" gap="$2">
+              <FileDown size={18} color="$gray11" />
+              <Text fontSize={14} fontWeight="700" color="$color">
+                {t('billFeatures.export.buttonSingle', 'Export bill')}
+              </Text>
+            </XStack>
+          </Button>
         </YStack>
 
         {participants.map(({ participant, avatarUrl, amount, paid, items }) => (
@@ -339,7 +361,7 @@ export default function HistoryDetailsScreen() {
                       {item.title}
                     </Text>
                     <Text fontSize={14} fontWeight="600" color="$primary">
-                      {item.price.toLocaleString()}
+                      {fmtCurrency(item.price, currency)}
                     </Text>
                   </XStack>
                 ))
@@ -373,6 +395,15 @@ export default function HistoryDetailsScreen() {
           </YStack>
         ))}
       </ScrollView>
+
+      {bill ? (
+        <ExportHistoryModal
+          visible={exportOpen}
+          onClose={() => setExportOpen(false)}
+          entries={[bill]}
+          scope="single"
+        />
+      ) : null}
     </YStack>
   );
 }

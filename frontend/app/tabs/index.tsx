@@ -11,9 +11,9 @@ import UserAvatar from '@/shared/ui/UserAvatar';
 import type { SessionHistoryEntry } from '@/features/sessions/api/history.api';
 import { useSessionsHistoryStore } from '@/features/sessions/model/history.store';
 import { replaySessionFromHistory } from '@/features/sessions/lib/replay-session';
+import { DEFAULT_CURRENCY, formatCurrencyAmount } from '@/shared/lib/currency';
 
 const HOME_HISTORY_LIMIT = 10;
-const DEFAULT_CURRENCY = 'UZS';
 
 const formatSessionDate = (value?: string, locale: string = 'en') => {
   if (!value) return '';
@@ -304,10 +304,7 @@ export default function HomePage() {
             const summary = `${formatSessionDate(dateForSummary, i18n.language)} • ${participantsLabel}`;
             const totalAmount = bill.grandTotal ?? 0;
             const currency = bill.currency || bill.payload?.totals?.currency || DEFAULT_CURRENCY;
-            const amountLabel = `${totalAmount.toLocaleString(i18n.language ?? 'en', {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0,
-            })} ${currency}`;
+            const amountLabel = formatCurrencyAmount(totalAmount, currency);
 
             return (
               <BillCard

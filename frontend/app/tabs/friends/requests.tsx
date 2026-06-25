@@ -9,21 +9,14 @@ import {
   Input,
   Text,
 } from 'tamagui';
-import { useRouter } from 'expo-router';
-import { CircleCheck, CircleX, QrCode, Scan } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
 import UserAvatar from '@/shared/ui/UserAvatar';
-import { FriendsApi } from '@/features/friends/api/friends.api';
+import { FriendRequestActions } from '@/features/friends/ui/FriendRequestActions';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 
 const LIST_W = 358;
 const ROW_H = 60;
-const TAB_W = 171;
-const TAB_H = 37;
-
-const TINT_REJECT = '#E74C3C1A';
-const TINT_ACCEPT = 'rgba(46,204,113,0.1)';
 
 function useAutoNotice() {
   const [text, setText] = useState<string | undefined>();
@@ -51,34 +44,6 @@ function useAutoNotice() {
       <Paragraph col={kind === 'error' ? '$red10' : '$green10'}>{text}</Paragraph>
     ) : null,
   };
-}
-
-function IconPill({
-  onPress,
-  disabled,
-  tint,
-  children,
-}: {
-  onPress?: () => void;
-  disabled?: boolean;
-  tint: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Button
-      chromeless
-      circular
-      w={28}
-      h={28}
-      p={0}
-      bg={tint}
-      onPress={onPress}
-      disabled={disabled}
-      pressStyle={{ opacity: 0.9 }}
-    >
-      {children}
-    </Button>
-  );
 }
 
 type UserLite = { uniqueId?: string; username?: string; displayName?: string; id?: number };
@@ -140,7 +105,6 @@ function UserRow({ title, uid, right, index, total, avatarUrl }: UserRowProps) {
 }
 
 export default function FriendsRequestsUnified() {
-  const router = useRouter();
   const notice = useAutoNotice();
   const { t } = useTranslation();
 
@@ -157,9 +121,6 @@ export default function FriendsRequestsUnified() {
   const tRef = useRef(t);
   const noticeOkRef = useRef(notice.ok);
   const noticeErrRef = useRef(notice.err);
-
-  const [busyId, setBusyId] = useState<number | null>(null);
-  const [tab, setTab] = useState<'outgoing' | 'incoming'>('incoming');
 
   useEffect(() => {
     fetchAll();
@@ -221,38 +182,51 @@ export default function FriendsRequestsUnified() {
 
   const unknownUser = t('friends.common.unknownUser', 'Unknown user');
 
-  const wrap = useCallback(
-    async (fn: () => Promise<any>, id: number, successMessage: string) => {
-      setBusyId(id);
-      try {
-        await fn();
-        notice.ok(successMessage);
-        await fetchAll();
-      } catch (error: any) {
-        notice.err(error?.message || t('friends.common.error', 'Something went wrong'));
-      } finally {
-        setBusyId(null);
-      }
-    },
-    [fetchAll, notice, t]
-  );
+  const renderIncomingList = () => {
+    if (incoming.length === 0) {
+      return (
+        <Paragraph col="$gray10" alignSelf="center" w={LIST_W}>
+          {t('friends.requestsScreen.emptyIncoming', 'No incoming requests')}
+        </Paragraph>
+      );
+    }
 
-  const accept = (fromId: number, name?: string, uid?: string) => {
-    const target = name ?? uid ?? unknownUser;
-    return wrap(
-      () => FriendsApi.accept(meUniqueId!, fromId),
-      fromId,
-      t('friends.requestsScreen.accepted', { target })
-    );
-  };
+    return incoming.map((request: any, index: number) => {
+      const name =
+        request.from?.displayName ||
+        request.from?.username ||
+        (request.from?.id ? `User #${request.from.id}` : undefined) ||
+        unknownUser;
+      const uid = request.from?.uniqueId;
+      const fromId = request.from?.id as number;
+      const avatarUrl = request.from?.avatarUrl ?? null;
 
-  const reject = (fromId: number, name?: string, uid?: string) => {
-    const target = name ?? uid ?? unknownUser;
-    return wrap(
-      () => FriendsApi.reject(meUniqueId!, fromId),
-      fromId,
-      t('friends.requestsScreen.rejected', { target })
-    );
+      return (
+        <UserRow
+          key={`in-${fromId}-${index}`}
+          index={index}
+          total={incoming.length}
+          title={name}
+          uid={uid}
+          avatarUrl={avatarUrl ?? undefined}
+          right={
+            meUniqueId ? (
+              <FriendRequestActions
+                requesterId={fromId}
+                myUniqueId={meUniqueId}
+                onAccepted={() =>
+                  notice.ok(t('friends.requestsScreen.accepted', { target: name }))
+                }
+                onRejected={() =>
+                  notice.ok(t('friends.requestsScreen.rejected', { target: name }))
+                }
+                onError={(message) => notice.err(message)}
+              />
+            ) : null
+          }
+        />
+      );
+    });
   };
 
   const runSearch = useCallback(async (value: string, notifyOnEmpty = false) => {
@@ -322,42 +296,40 @@ export default function FriendsRequestsUnified() {
     }
   };
 
-  const tabLabels = useMemo(
-    () => ({
-      outgoing: t('friends.requestsScreen.tabOutgoing', 'Outgoing'),
-      incoming: t('friends.requestsScreen.tabIncoming', 'Incoming'),
-    }),
-    [t]
-  );
-
   return (
     <YStack f={1} p="$4" gap="$4" bg="$background">
       {notice.node}
       {error && <Paragraph col="$red10">{error}</Paragraph>}
 
-      {/* Invite quick actions */}
-      <XStack jc="space-between" ai="center" alignSelf="center" w={LIST_W}>
-        <Button
-          onPress={() =>
-            router.push({ pathname: '/tabs/scan-invite', params: { from: 'friends-requests' } } as never)
-          }
-          size="$3"
-          borderRadius="$3"
-          theme="active"
-          icon={<Scan size={18} />}
-        >
-          {t('friends.requestsScreen.scanInvite', 'Scan invite')}
-        </Button>
-        <Button
-          onPress={() => router.push('/tabs/friends/invite' as never)}
-          size="$3"
-          borderRadius="$3"
-          theme="gray"
-          icon={<QrCode size={18} />}
-        >
-          {t('friends.requestsScreen.showMyQr', 'Show my QR')}
-        </Button>
-      </XStack>
+      <YStack
+        alignSelf="center"
+        w={LIST_W}
+        p="$3"
+        borderRadius={12}
+        borderWidth={1}
+        borderColor="$primary"
+        bg="rgba(46,204,113,0.08)"
+        gap="$1"
+      >
+        <Text fontSize={15} fontWeight="700" color="$primary">
+          {t('friends.requestsScreen.title', 'Friend requests')}
+        </Text>
+        <Paragraph color="$gray10">
+          {t(
+            'friends.requestsScreen.hint',
+            'Open Incoming to accept requests. Accepted friends will appear in split participants right away.'
+          )}
+        </Paragraph>
+      </YStack>
+
+      <YStack gap="$2" alignSelf="center" w={LIST_W}>
+        <Text fontSize={15} fontWeight="700" color="$color">
+          {t('friends.requestsScreen.tabIncoming', 'Incoming')}
+        </Text>
+        {loading && incoming.length === 0 ? <Spinner /> : renderIncomingList()}
+      </YStack>
+
+      <Separator />
 
       {/* Search */}
       <XStack ai="center" alignSelf="center">
@@ -437,7 +409,6 @@ export default function FriendsRequestsUnified() {
                     h={37}
                     px={10}
                     gap={10}
-                    w={TAB_W}
                     onPress={() => sendInvite(uid, title)}
                     disabled={!uid || disabled || isBusy}
                   >
@@ -450,127 +421,40 @@ export default function FriendsRequestsUnified() {
         </>
       ) : null}
 
-      {/* Tabs */}
       <Separator />
-      <XStack gap={10} ai="center" jc="center" alignSelf="center">
-        <Button
-          w={TAB_W}
-          h={TAB_H}
-          gap={10}
-          onPress={() => setTab('outgoing')}
-          variant="outlined"
-          borderColor={tab === 'outgoing' ? '$green8' : '$gray6'}
-          bg={tab === 'outgoing' ? '$green3' : '$color1'}
-          color="$gray12"
-          borderRadius={10}
-          borderWidth={1}
-          p="$2"
-        >
-          {tabLabels.outgoing}
-        </Button>
-        <Button
-          w={TAB_W}
-          h={TAB_H}
-          gap={10}
-          onPress={() => setTab('incoming')}
-          variant="outlined"
-          borderColor={tab === 'incoming' ? '$green8' : '$gray6'}
-          bg={tab === 'incoming' ? '$green3' : '$color1'}
-          color="$gray12"
-          borderRadius={10}
-          borderWidth={1}
-          p="$2"
-        >
-          {tabLabels.incoming}
-        </Button>
-      </XStack>
-
-      {/* Lists */}
-      {tab === 'incoming' ? (
-        <>
-          <Separator />
-          {incoming.length === 0 ? (
-            <Paragraph col="$gray10">
-              {t('friends.requestsScreen.emptyIncoming', 'No incoming requests')}
-            </Paragraph>
-          ) : (
-            incoming.map((request: any, index: number) => {
-              const name =
-                request.from?.displayName ||
-                request.from?.username ||
-                (request.from?.id ? `User #${request.from.id}` : undefined) ||
-                unknownUser;
-              const uid = request.from?.uniqueId;
-              const fromId = request.from?.id as number;
-              const avatarUrl = request.from?.avatarUrl ?? null;
-              const isBusy = busyId === fromId;
-
-              return (
-                <UserRow
-                  key={`in-${fromId}-${index}`}
-                  index={index}
-                  total={incoming.length}
-                  title={name}
-                  uid={uid}
-                  avatarUrl={avatarUrl ?? undefined}
-                  right={
-                    <XStack gap={10}>
-                      <IconPill
-                        tint={TINT_REJECT}
-                        onPress={() => reject(fromId, name, uid)}
-                        disabled={isBusy}
-                      >
-                        <CircleX size={16} color="#E74C3C" />
-                      </IconPill>
-                      <IconPill
-                        tint={TINT_ACCEPT}
-                        onPress={() => accept(fromId, name, uid)}
-                        disabled={isBusy}
-                      >
-                        <CircleCheck size={16} color="$primary" />
-                      </IconPill>
-                    </XStack>
-                  }
-                />
-              );
-            })
-          )}
-        </>
+      <Text fontSize={15} fontWeight="700" color="$color" alignSelf="center" w={LIST_W}>
+        {t('friends.requestsScreen.tabOutgoing', 'Outgoing')}
+      </Text>
+      {outgoing.length === 0 ? (
+        <Paragraph col="$gray10" alignSelf="center" w={LIST_W}>
+          {t('friends.requestsScreen.emptyOutgoing', 'No outgoing requests')}
+        </Paragraph>
       ) : (
-        <>
-          <Separator />
-          {outgoing.length === 0 ? (
-            <Paragraph col="$gray10">
-              {t('friends.requestsScreen.emptyOutgoing', 'No outgoing requests')}
-            </Paragraph>
-          ) : (
-            outgoing.map((request: any, index: number) => {
-              const name =
-                request.to?.displayName ||
-                request.to?.username ||
-                request.to?.uniqueId ||
-                unknownUser;
-              const uid = request.to?.uniqueId;
-              const avatarUrl = request.to?.avatarUrl ?? null;
+        outgoing.map((request: any, index: number) => {
+          const name =
+            request.to?.displayName ||
+            request.to?.username ||
+            request.to?.uniqueId ||
+            unknownUser;
+          const uid = request.to?.uniqueId;
+          const avatarUrl = request.to?.avatarUrl ?? null;
 
-              return (
-                <UserRow
-                  key={`out-${uid ?? index}`}
-                  index={index}
-                  total={outgoing.length}
-                  title={name}
-                  uid={uid}
-                  avatarUrl={avatarUrl ?? undefined}
-                  right={
-                    <Paragraph size="$2" col="$gray10">
-                      {t('friends.requestsScreen.requestedLabel', 'Requested')}
-                    </Paragraph>
-                  }
-                />
-              );
-            })
-          )}
-        </>
+          return (
+            <UserRow
+              key={`out-${uid ?? index}`}
+              index={index}
+              total={outgoing.length}
+              title={name}
+              uid={uid}
+              avatarUrl={avatarUrl ?? undefined}
+              right={
+                <Paragraph size="$2" col="$gray10">
+                  {t('friends.requestsScreen.requestedLabel', 'Requested')}
+                </Paragraph>
+              }
+            />
+          );
+        })
       )}
     </YStack>
   );

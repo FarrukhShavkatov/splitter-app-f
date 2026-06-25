@@ -13,7 +13,8 @@ type Actions = {
   fetchAll: () => Promise<void>;
   search: (q: string) => Promise<any[]>;
   send: (uniqueId: string) => Promise<void>;
-  remove: (uniqueId: string) => Promise<void>; // <-- меняем тип
+  remove: (uniqueId: string) => Promise<void>;
+  removeIncomingRequest: (requesterId: number) => void;
 };
 
 export const useFriendsStore = create<State & Actions>((set, get) => ({
@@ -63,7 +64,23 @@ export const useFriendsStore = create<State & Actions>((set, get) => ({
   },
 
   async remove(uniqueId) {
-    await FriendsApi.remove(uniqueId); // <-- передаем строку
-    await get().fetchAll(); // обновляем список после удаления
+    await FriendsApi.remove(uniqueId);
+    await get().fetchAll();
+  },
+
+  removeIncomingRequest(requesterId) {
+    set((state) => {
+      const incoming = state.requestsRaw?.incoming ?? [];
+      const nextIncoming = incoming.filter(
+        (request: any) => (request.from?.id ?? request.fromId) !== requesterId
+      );
+      if (nextIncoming.length === incoming.length) return state;
+      return {
+        requestsRaw: {
+          ...state.requestsRaw,
+          incoming: nextIncoming,
+        },
+      };
+    });
   },
 }));

@@ -211,6 +211,10 @@ export default function SessionParticipantsScreen() {
 
   const selectedList = Object.keys(selected).filter(k => selected[k]);
   const canNext = selectedList.length >= 2;
+  const selectedParticipants = useMemo(
+    () => unionPeople.filter((p) => selected[p.uniqueId]),
+    [selected, unionPeople]
+  );
 
   const fmtUid = (uid: string) => `@${uid.toLowerCase().replace('user#', 'user')}`;
   const goNext = () => {
@@ -294,6 +298,31 @@ export default function SessionParticipantsScreen() {
 
   return (
     <YStack f={1} bg="$background" p="$4" position="relative">
+      <YStack
+        p="$3"
+        borderRadius={12}
+        borderWidth={1}
+        borderColor="$primary"
+        bg="rgba(46,204,113,0.08)"
+        gap="$1"
+        mb="$3"
+      >
+        <Text fontSize={15} fontWeight="700" color="$primary">
+          {t('sessions.participants.title', 'Choose participants')}
+        </Text>
+        <Text fontSize={12} color="$gray10" lineHeight={18}>
+          {t(
+            'sessions.participants.hint',
+            'Only selected people will receive the finalized bill and see it in history.'
+          )}
+        </Text>
+        <Text fontSize={12} color="$gray10" lineHeight={18}>
+          {t(
+            'sessions.participants.finalizeHint',
+            'Notifications are sent after the bill is finalized, not at the scan step.'
+          )}
+        </Text>
+      </YStack>
 
       {/* Groups */}
       {(groups ?? []).length > 0 && (
@@ -324,6 +353,42 @@ export default function SessionParticipantsScreen() {
         borderWidth={0}
         mb="$3"
       />
+
+      <YStack
+        mb="$3"
+        p="$3"
+        borderRadius={12}
+        borderWidth={1}
+        borderColor="$gray5"
+        bg="$color1"
+        gap="$2"
+      >
+        <XStack ai="center" jc="space-between">
+          <Text fontSize={13} color="$gray10">
+            {t('sessions.participants.selectedSummary', 'Selected participants')}
+          </Text>
+          <Text fontSize={13} fontWeight="700" color="$color">
+            {selectedParticipants.length}
+          </Text>
+        </XStack>
+        <XStack flexWrap="wrap" gap="$2">
+          {selectedParticipants.map((p) => (
+            <XStack
+              key={`sel-${p.uniqueId}`}
+              ai="center"
+              gap="$1"
+              px="$2"
+              py="$1"
+              borderRadius={16}
+              bg="rgba(46,204,113,0.1)"
+            >
+              <Text fontSize={12} fontWeight="600" color="$primary">
+                {p.username}
+              </Text>
+            </XStack>
+          ))}
+        </XStack>
+      </YStack>
 
       {/* List */}
       <ScrollView
@@ -391,6 +456,14 @@ export default function SessionParticipantsScreen() {
             {t('sessions.participants.next', 'Next')}
           </Text>
         </Button>
+        {!canNext && (
+          <Text mt="$2" fontSize={12} color="$gray10" textAlign="center">
+            {t(
+              'sessions.participants.minimumHint',
+              'Select at least two people to continue.'
+            )}
+          </Text>
+        )}
       </YStack>
     </YStack>
   );

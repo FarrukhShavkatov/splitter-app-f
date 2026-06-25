@@ -7,6 +7,8 @@ import { Plus, Trash2 } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/Button';
 import { useReceiptSessionStore } from '@/features/receipt/model/receipt-session.store';
+import { SELECTABLE_CURRENCIES, formatCurrencyAmount } from '@/shared/lib/currency';
+import { useAppStore } from '@/shared/lib/stores/app-store';
 
 // ручной ввод чека
 interface ManualItem {
@@ -17,15 +19,15 @@ interface ManualItem {
 }
 
 const makeId = () => `m-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-const CURRENCIES = ['UZS', 'USD', 'EUR', 'RUB', 'JPY'];
 
 export default function ManualReceiptScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const createManualSession = useReceiptSessionStore((s) => s.createManualSession);
   const parsing = useReceiptSessionStore((s) => s.parsing);
+  const currency = useAppStore((s) => s.currency);
+  const setCurrency = useAppStore((s) => s.setCurrency);
   const [sessionName, setSessionName] = useState('');
-  const [currency, setCurrency] = useState('UZS');
   const [items, setItems] = useState<ManualItem[]>([
     { localId: makeId(), name: '', price: '', quantity: '1' },
   ]);
@@ -108,13 +110,13 @@ export default function ManualReceiptScreen() {
                   {t('manual.currency', 'Currency')}
                 </Text>
                 <XStack gap="$2" flexWrap="wrap">
-                  {CURRENCIES.map((c) => (
+                  {SELECTABLE_CURRENCIES.map((option) => (
                     <Button
-                      key={c}
-                      title={c}
-                      variant={c === currency ? 'primary' : 'outline'}
+                      key={option.code}
+                      title={option.label}
+                      variant={option.code === currency ? 'primary' : 'outline'}
                       size="small"
-                      onPress={() => setCurrency(c)}
+                      onPress={() => setCurrency(option.code)}
                     />
                   ))}
                 </XStack>
@@ -237,7 +239,7 @@ export default function ManualReceiptScreen() {
                     {t('manual.total', 'Total')}
                   </Text>
                   <Text fontSize={22} fontWeight="700" color="$primary">
-                    {grandTotal.toLocaleString()} {currency}
+                    {formatCurrencyAmount(grandTotal, currency)}
                   </Text>
                 </XStack>
               </YStack>

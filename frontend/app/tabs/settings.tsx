@@ -12,10 +12,11 @@ import PasswordInput from '@/shared/ui/PasswordInput';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { changePassword, updateUsername } from '@/features/auth/api';
 import { LANGUAGE_OPTIONS, type LanguageCode } from '@/shared/config/languages';
+import { SELECTABLE_CURRENCIES, type SelectableCurrencyCode } from '@/shared/lib/currency';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { user, setUser, language, setLanguage } = useAppStore();
+  const { user, setUser, language, setLanguage, currency, setCurrency } = useAppStore();
   const { t } = useTranslation();
   const isLoggedIn = !!user;
   const [usernameValue, setUsernameValue] = useState(user?.username ?? '');
@@ -62,6 +63,11 @@ export default function SettingsScreen() {
   const handleLanguageChange = (code: LanguageCode) => {
     if (code === language) return;
     setLanguage(code);
+  };
+
+  const handleCurrencyChange = (code: SelectableCurrencyCode) => {
+    if (code === currency) return;
+    setCurrency(code);
   };
 
   const handleSaveUsername = async () => {
@@ -187,6 +193,42 @@ export default function SettingsScreen() {
                         variant={isActive ? 'primary' : 'outline'}
                         size="small"
                         onPress={() => handleLanguageChange(option.code)}
+                      />
+                    );
+                  })}
+                </XStack>
+              </YStack>
+
+              <Separator />
+
+              {/* CURRENCY */}
+              <YStack space="$3">
+                <Text fontSize={16} fontWeight="600" color="$color">
+                  {t('settings.currency.title', 'Default currency')}
+                </Text>
+                <Text fontSize={14} color="$gray10">
+                  {t(
+                    'settings.currency.description',
+                    'Used for manual bills and scans when the receipt currency is not detected.'
+                  )}
+                </Text>
+
+                <XStack
+                  space="$2"
+                  backgroundColor="$gray3"
+                  borderRadius="$8"
+                  padding="$1"
+                  flexWrap="wrap"
+                >
+                  {SELECTABLE_CURRENCIES.map((option) => {
+                    const isActive = option.code === currency;
+                    return (
+                      <Button
+                        key={option.code}
+                        title={option.label}
+                        variant={isActive ? 'primary' : 'outline'}
+                        size="small"
+                        onPress={() => handleCurrencyChange(option.code)}
                       />
                     );
                   })}

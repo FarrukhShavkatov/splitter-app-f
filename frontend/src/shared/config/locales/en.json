@@ -51,6 +51,7 @@
     "requests": "Requests",
     "add": "Add Friend",
     "empty": "No friends yet. Tap + to add.",
+    "incomingSection": "Incoming requests",
     "searchPlaceholder": "Enter User ID or Username",
     "send": "Send request",
     "remove": "Remove",
@@ -78,8 +79,12 @@
       "inviteFailed": "Could not send invite"
     },
     "requestsScreen": {
+      "title": "Friend requests",
+      "hint": "Use Accept or Reject on each request below. Search by username or ID to add new friends.",
       "accepted": "{{target}} was added to friends",
       "rejected": "Request from {{target}} was rejected",
+      "acceptCta": "Accept",
+      "rejectCta": "Reject",
       "tabOutgoing": "Outgoing",
       "tabIncoming": "Incoming",
       "scanInvite": "Scan invite",
@@ -223,6 +228,24 @@
     "title": "Notifications",
     "empty": "No notifications yet",
     "markAllRead": "Mark all read",
+    "types": {
+      "friendRequest": {
+        "title": "Friend request",
+        "body": "{{actor}} sent you a friend request"
+      },
+      "sessionFinalized": {
+        "title": "Bill finalized",
+        "body": "{{actor}} finalized \"{{name}}\" — {{amount}}"
+      },
+      "debtReminder": {
+        "title": "Amount to pay",
+        "body": "You owe {{amount}} for \"{{name}}\""
+      },
+      "paymentMarked": {
+        "title": "Payment marked",
+        "body": "{{participant}} marked paid for \"{{name}}\""
+      }
+    },
     "time": {
       "justNow": "just now",
       "minutesAgo": "{{count}}m ago",
@@ -259,14 +282,15 @@
     "defaultName": "Manual bill",
     "noItems": "Add at least one item with a name and price."
   },
-  "history": {
+    "history": {
     "title": "Recent bills",
     "subtitle": "Home",
     "loading": "Loading...",
     "empty": "No history yet",
     "participants": "{{count}} participants",
     "participants_one": "{{count}} participant",
-    "fallbackName": "Bill"
+    "fallbackName": "Bill",
+    "export": "Export file"
   },
   "settings": {
     "language": {
@@ -365,6 +389,11 @@
   },
   "sessions": {
     "participants": {
+      "title": "Choose participants",
+      "hint": "Only selected people will receive the finalized bill and see it in history.",
+      "finalizeHint": "Notifications are sent after the bill is finalized, not at the scan step.",
+      "selectedSummary": "Selected participants",
+      "minimumHint": "Select at least two people to continue.",
       "search": "Search…",
       "select": "Select",
       "selected": "Selected",
@@ -386,6 +415,17 @@
       "deleteItem": "Remove item",
       "saveItem": "Save",
       "saving": "Saving...",
+      "finalizeHint": "After finalizing, selected participants will get a notification and this bill will appear in their history.",
+      "participantStatus": "Participant status",
+      "assignedState": "Assigned",
+      "unassignedState": "Unassigned",
+      "assignedUnits": "{{assigned}}/{{total}} assigned",
+      "remainingUnits_one": "Assign 1 remaining unit",
+      "remainingUnits_other": "Assign {{count}} remaining units",
+      "equalAssigned": "Assigned to {{count}} participant(s)",
+      "equalSplitHint": "Price split equally:",
+      "countAssigned": "{{count}} unit(s) assigned",
+      "perUnit": "Per unit:",
       "equalSplit": "Equal split",
       "byUnits": "By units",
       "assignTo": "Assign to:",
@@ -447,6 +487,38 @@
     "payment": {
       "markedTitle": "Payment marked"
     },
+    "export": {
+      "title": "Bill history export",
+      "titleSingle": "Export this bill",
+      "titleAll": "Export all bills",
+      "button": "Export file",
+      "buttonSingle": "Export bill",
+      "hint": "Choose a format and send via mail, chat, or cloud.",
+      "exportedAt": "Exported at",
+      "bill": "Bill",
+      "date": "Date",
+      "total": "Total",
+      "participants": "Participants",
+      "participant": "Participant",
+      "amount": "Amount",
+      "status": "Status",
+      "items": "Items",
+      "itemName": "Item",
+      "itemShare": "Share",
+      "footer": "Exported from Receipt Splitter",
+      "filePrefix": "receipt-splitter",
+      "error": "Could not export file",
+      "formats": {
+        "pdf": "PDF",
+        "pdfDesc": "Best for printing and sharing. Opens in any PDF viewer.",
+        "csv": "CSV (Excel / Sheets)",
+        "csvDesc": "Spreadsheet format for Excel, Google Sheets, or Numbers.",
+        "doc": "Word (.doc)",
+        "docDesc": "Opens in Microsoft Word, Google Docs, or Pages.",
+        "txt": "Plain text",
+        "txtDesc": "Simple text file for any messenger or email."
+      }
+    },
     "guide": {
       "title": "How to use",
       "subtitle": "Receipt → split → share → settle",
@@ -466,7 +538,9 @@
       "step7Title": "7. Repeat bill",
       "step7Body": "Use Repeat bill to start again with the same people and items.",
       "step8Title": "8. Groups",
-      "step8Body": "In a group, tap Start bill with group to pre-fill members."
+      "step8Body": "In a group, tap Start bill with group to pre-fill members.",
+      "step9Title": "9. Export history",
+      "step9Body": "On bill history, tap Export file — choose PDF, CSV, Word, or text and send."
     }
   },
   "inviteScan": {

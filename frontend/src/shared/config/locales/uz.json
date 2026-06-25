@@ -51,6 +51,7 @@
     "requests": "So'rovlar",
     "add": "Do'st qo'shish",
     "empty": "Hali do'stlar yo'q. Qo'shish uchun + tugmasini bosing.",
+    "incomingSection": "Kiruvchi so'rovlar",
     "searchPlaceholder": "User ID yoki username kiriting",
     "send": "So'rov yuborish",
     "remove": "O'chirish",
@@ -78,8 +79,12 @@
       "inviteFailed": "So'rov yuborib bo'lmadi"
     },
     "requestsScreen": {
+      "title": "Do'stlik so'rovlari",
+      "hint": "Har bir so'rov yonidagi Qabul qilish yoki Rad etish tugmalaridan foydalaning. Yangi do'st qo'shish uchun qidiring.",
       "accepted": "{{target}} do'stlarga qo'shildi",
       "rejected": "{{target}} dan kelgan so'rov rad etildi",
+      "acceptCta": "Qabul qilish",
+      "rejectCta": "Rad etish",
       "tabOutgoing": "Chiquvchi",
       "tabIncoming": "Kiruvchi",
       "scanInvite": "Taklifni skanerlash",
@@ -223,6 +228,24 @@
     "title": "Bildirishnomalar",
     "empty": "Hali bildirishnoma yo'q",
     "markAllRead": "Hammasini o'qilgan deb belgilash",
+    "types": {
+      "friendRequest": {
+        "title": "Do'stlik so'rovi",
+        "body": "{{actor}} sizga do'stlik so'rovi yubordi"
+      },
+      "sessionFinalized": {
+        "title": "Hisob yakunlandi",
+        "body": "{{actor}} \"{{name}}\" hisobini yakunladi — {{amount}}"
+      },
+      "debtReminder": {
+        "title": "To'lov summasi",
+        "body": "\"{{name}}\" uchun {{amount}} to'lashingiz kerak"
+      },
+      "paymentMarked": {
+        "title": "To'lov belgilandi",
+        "body": "{{participant}} \"{{name}}\" uchun to'lov qilganini belgiladi"
+      }
+    },
     "time": {
       "justNow": "hozirgina",
       "minutesAgo": "{{count}} daqiqa oldin",
@@ -266,7 +289,8 @@
     "empty": "Hali tarix mavjud emas",
     "participants": "{{count}} ishtirokchi",
     "participants_one": "{{count}} ishtirokchi",
-    "fallbackName": "Hisob"
+    "fallbackName": "Hisob",
+    "export": "Faylga eksport"
   },
   "settings": {
     "language": {
@@ -365,6 +389,11 @@
   },
   "sessions": {
     "participants": {
+      "title": "Ishtirokchilarni tanlang",
+      "hint": "Aynan shu yerda tanlangan odamlar yakunlangandan keyin bildirishnoma va tarixda hisobni ko'radi.",
+      "finalizeHint": "Bildirishnoma skan paytida emas, hisob yakunlangandan keyin yuboriladi.",
+      "selectedSummary": "Tanlangan ishtirokchilar",
+      "minimumHint": "Davom etish uchun kamida 2 kishi tanlang.",
       "search": "Qidirish…",
       "select": "Tanlash",
       "selected": "Tanlangan",
@@ -386,6 +415,17 @@
       "deleteItem": "O'chirish",
       "saveItem": "Saqlash",
       "saving": "Saqlanmoqda...",
+      "finalizeHint": "Yakunlangach, tanlangan ishtirokchilarga bildirishnoma boradi va bu hisob ularning tarixida ko'rinadi.",
+      "participantStatus": "Ishtirokchi holati",
+      "assignedState": "Biriktirilgan",
+      "unassignedState": "Biriktirilmagan",
+      "assignedUnits": "{{assigned}}/{{total}} biriktirilgan",
+      "remainingUnits_one": "Qolgan 1 dona biriktirilsin",
+      "remainingUnits_other": "Qolgan {{count}} dona biriktirilsin",
+      "equalAssigned": "{{count}} kishiga biriktirilgan",
+      "equalSplitHint": "Teng bo'lingan summa:",
+      "countAssigned": "{{count}} dona biriktirilgan",
+      "perUnit": "Har dona:",
       "equalSplit": "Teng bo'lish",
       "byUnits": "Donalar bo'yicha",
       "assignTo": "Kimga biriktirish:",
@@ -447,6 +487,38 @@
     "payment": {
       "markedTitle": "To'lov belgilandi"
     },
+    "export": {
+      "title": "Hisoblar tarixini eksport",
+      "titleSingle": "Ushbu hisobni eksport qilish",
+      "titleAll": "Barcha hisoblarni eksport qilish",
+      "button": "Faylga eksport",
+      "buttonSingle": "Hisobni eksport qilish",
+      "hint": "Formatni tanlang va pochta, chat yoki bulut orqali yuboring.",
+      "exportedAt": "Eksport vaqti",
+      "bill": "Hisob",
+      "date": "Sana",
+      "total": "Jami",
+      "participants": "Ishtirokchilar",
+      "participant": "Ishtirokchi",
+      "amount": "Summa",
+      "status": "Holat",
+      "items": "Mahsulotlar",
+      "itemName": "Mahsulot",
+      "itemShare": "Ulush",
+      "footer": "Receipt Splitter dan eksport",
+      "filePrefix": "receipt-splitter",
+      "error": "Faylni eksport qilib bo'lmadi",
+      "formats": {
+        "pdf": "PDF",
+        "pdfDesc": "Chop etish va ulashish uchun eng qulay.",
+        "csv": "CSV (Excel / Sheets)",
+        "csvDesc": "Excel, Google Sheets yoki Numbers uchun jadval.",
+        "doc": "Word (.doc)",
+        "docDesc": "Microsoft Word, Google Docs yoki Pages da ochiladi.",
+        "txt": "Oddiy matn",
+        "txtDesc": "Har qanday messenjer yoki email uchun."
+      }
+    },
     "guide": {
       "title": "Qo'llanma",
       "subtitle": "Chek → bo'lish → ulashish → hisob",
@@ -466,7 +538,9 @@
       "step7Title": "7. Takrorlash",
       "step7Body": "Takrorlash — xuddi shu odamlar va mahsulotlar bilan yangi hisob.",
       "step8Title": "8. Guruhlar",
-      "step8Body": "Guruhda Guruh bilan hisob — a'zolar oldindan qo'shiladi."
+      "step8Body": "Guruhda Guruh bilan hisob — a'zolar oldindan qo'shiladi.",
+      "step9Title": "9. Tarixni eksport",
+      "step9Body": "Hisoblar tarixida Faylga eksport — PDF, CSV, Word yoki matn."
     }
   },
   "inviteScan": {

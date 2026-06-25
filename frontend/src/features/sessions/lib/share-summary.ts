@@ -1,5 +1,6 @@
 import type { FinishPayload } from '@/features/receipt/model/receipt-session.store';
 import type { SessionHistoryEntry } from '@/features/sessions/api/history.api';
+import { DEFAULT_CURRENCY, formatCurrencyAmount } from '@/shared/lib/currency';
 
 export type ShareSummaryLabels = {
   title: string;
@@ -10,14 +11,13 @@ export type ShareSummaryLabels = {
   footer: string;
 };
 
-const fmt = (value: number, currency: string) =>
-  `${currency} ${Math.round(value).toLocaleString('en-US')}`;
+const fmt = (value: number, currency: string) => formatCurrencyAmount(value, currency);
 
 export function buildShareTextFromFinish(
   payload: FinishPayload,
   labels: ShareSummaryLabels
 ): string {
-  const currency = payload.currency || 'UZS';
+  const currency = payload.currency || DEFAULT_CURRENCY;
   const lines: string[] = [
     labels.title,
     payload.sessionName || 'Bill',
@@ -42,7 +42,7 @@ export function buildShareTextFromHistory(
   labels: ShareSummaryLabels
 ): string {
   const currency =
-    bill.currency || bill.totals?.currency || bill.payload?.totals?.currency || 'UZS';
+    bill.currency || bill.totals?.currency || bill.payload?.totals?.currency || DEFAULT_CURRENCY;
   const lines: string[] = [
     labels.title,
     bill.sessionName || 'Bill',

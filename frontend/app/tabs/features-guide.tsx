@@ -15,6 +15,7 @@ const STEPS = [
   'step6',
   'step7',
   'step8',
+  'step9',
 ] as const;
 
 export default function FeaturesGuideScreen() {

@@ -8,6 +8,21 @@ import { createNotification } from "./notifications.js";
 
 const router = Router();
 
+async function markFriendRequestNotificationsRead(
+  receiverId: number,
+  requesterId: number
+) {
+  await prisma.notification.updateMany({
+    where: {
+      userId: receiverId,
+      type: "FRIEND_REQUEST",
+      read: false,
+      meta: { path: ["requesterId"], equals: requesterId },
+    },
+    data: { read: true },
+  });
+}
+
 /**
  * @swagger
  * tags:
@@ -406,7 +421,7 @@ router.post(
         }),
         prisma.user.findUnique({
           where: { id: me },
-          select: { username: true },
+          select: { username: true, uniqueId: true },
         }),
       ]);
       if (!target) return res.status(404).json({ error: "User not found" });
@@ -450,7 +465,17 @@ router.post(
             where: { id: existing.id },
             data: { requesterId: me, receiverId: target.id, status: "PENDING" },
           });
-          createNotification(target.id, "FRIEND_REQUEST", "Friend request", `${requester?.username ?? "Someone"} sent you a friend request`);
+          createNotification(
+            target.id,
+            "FRIEND_REQUEST",
+            "Friend request",
+            `${requester?.username ?? "Someone"} sent you a friend request`,
+            {
+              requesterId: me,
+              requesterUniqueId: requester?.uniqueId ?? undefined,
+              requesterUsername: requester?.username ?? undefined,
+            }
+          );
           return res.json({ success: true, action: "requested", id: updated.id });
         }
       }
@@ -467,7 +492,17 @@ router.post(
         throw e;
       }
       console.log("/friends/request created:", { id: created.id });
-      createNotification(target.id, "FRIEND_REQUEST", "Friend request", `${requester?.username ?? "Someone"} sent you a friend request`);
+      createNotification(
+        target.id,
+        "FRIEND_REQUEST",
+        "Friend request",
+        `${requester?.username ?? "Someone"} sent you a friend request`,
+        {
+          requesterId: me,
+          requesterUniqueId: requester?.uniqueId ?? undefined,
+          requesterUsername: requester?.username ?? undefined,
+        }
+      );
       return res.json({ success: true, action: "requested", id: created.id });
     } catch (err) {
       console.error("/friends/request error:", err);
@@ -515,8 +550,9 @@ router.patch(
       console.log("PATCH /friends/accept body:", { uniqueId, requesterId });
 
       let otherId: number | null = null;
-      if (typeof requesterId === "number") {
-        otherId = requesterId;
+      const parsedRequesterId = Number(requesterId);
+      if (Number.isFinite(parsedRequesterId) && parsedRequesterId > 0) {
+        otherId = parsedRequesterId;
       } else if (typeof uniqueId === "string") {
         const u = await prisma.user.findUnique({
           where: { uniqueId: uniqueId.trim() },
@@ -545,6 +581,7 @@ router.patch(
         prisma.user.findUnique({ where: { id: me }, select: { username: true } }),
       ]);
       console.log("/friends/accept updated:", { id: updated.id });
+      await markFriendRequestNotificationsRead(me, otherId);
       createNotification(otherId, "FRIEND_ACCEPTED", "Friend request accepted", `${acceptor?.username ?? "Someone"} accepted your friend request`);
       return res.json({ success: true, id: updated.id });
     } catch (err) {
@@ -593,8 +630,9 @@ router.patch(
       console.log("PATCH /friends/reject body:", { uniqueId, requesterId });
 
       let otherId: number | null = null;
-      if (typeof requesterId === "number") {
-        otherId = requesterId;
+      const parsedRequesterId = Number(requesterId);
+      if (Number.isFinite(parsedRequesterId) && parsedRequesterId > 0) {
+        otherId = parsedRequesterId;
       } else if (typeof uniqueId === "string") {
         const u = await prisma.user.findUnique({
           where: { uniqueId: uniqueId.trim() },
@@ -620,6 +658,7 @@ router.patch(
         data: { status: "REJECTED" },
       });
       console.log("/friends/reject updated:", { id: updated.id });
+      await markFriendRequestNotificationsRead(me, otherId);
       return res.json({ success: true, id: updated.id });
     } catch (err) {
       console.error("/friends/reject error:", err);

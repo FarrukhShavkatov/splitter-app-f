@@ -9,6 +9,7 @@ import { buildShareTextFromFinish } from '@/features/sessions/lib/share-summary'
 import type { FinalizeTotalsByItem, FinalizeTotalsByParticipant, ReceiptAllocation } from '@/features/receipt/api/receipt.api';
 import { useReceiptSessionStore, type FinishPayload } from '@/features/receipt/model/receipt-session.store';
 import { useTranslation } from 'react-i18next';
+import { DEFAULT_CURRENCY, getCurrencyParts } from '@/shared/lib/currency';
 
 type Participant = { uniqueId: string; username: string };
 
@@ -28,14 +29,6 @@ const pickFirstNumber = (...values: Array<number | null | undefined>) => {
   }
   return 0;
 };
-const fmtCurrency = (n: number, currency: string) => `${currency} ${Math.round(n).toLocaleString('en-US')}`;
-
-const getCurrencyParts = (n: number, currency: string) => {
-  const formatted = fmtCurrency(n, currency);
-  const [cur, ...rest] = formatted.split(' ');
-  return { currency: cur, amount: rest.join(' ') || '0' };
-};
-
 export default function FinishScreen() {
   const { t } = useTranslation();
   const { data } = useLocalSearchParams<{ data?: string }>();
@@ -72,7 +65,7 @@ export default function FinishScreen() {
   const sessionName = payload?.sessionName;
   const status = payload?.status;
   const receiptId = payload?.receiptId;
-  const currency = payload?.currency || 'UZS';
+  const currency = payload?.currency || DEFAULT_CURRENCY;
 
   const { participantSummaries, itemSummaries, effectiveGrandTotal } = useMemo(() => {
     type RawParticipantTotal = FinalizeTotalsByParticipant & {

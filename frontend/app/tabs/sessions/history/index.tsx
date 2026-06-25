@@ -1,16 +1,17 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, RefreshControl } from 'react-native';
-import { YStack, XStack, Text, ScrollView, View } from 'tamagui';
+import { YStack, XStack, Text, ScrollView, View, Button } from 'tamagui';
+import { FileDown } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
 import UserAvatar from '@/shared/ui/UserAvatar';
 import { useSessionsHistoryStore } from '@/features/sessions/model/history.store';
+import { ExportHistoryModal } from '@/features/sessions/ui/ExportHistoryModal';
 import type { SessionHistoryEntry, SessionHistoryParticipantLight } from '@/features/sessions/api/history.api';
+import { DEFAULT_CURRENCY, formatCurrencyAmount } from '@/shared/lib/currency';
 
 const BULLET = '\u2022';
 const HISTORY_LIMIT = 50;
-const DEFAULT_CURRENCY = 'UZS';
-
 const DATE_LOCALE_MAP: Record<string, string> = {
   en: 'en-US',
   uz: 'uz-UZ',
@@ -126,6 +127,7 @@ export default function SessionsHistoryScreen() {
   const refreshIfStale = useSessionsHistoryStore(state => state.refreshIfStale);
 
   const [refreshing, setRefreshing] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   // FIX: ранее зависимости включали [initialized, loading, currentLimit, fetchHistory, refreshIfStale].
   // каждый вызов fetchHistory менял loading (false→true→false) и currentLimit,
@@ -153,7 +155,7 @@ export default function SessionsHistoryScreen() {
   const history = useMemo<SessionHistoryEntry[]>(() => sessions, [sessions]);
 
   return (
-    <YStack f={1} bg="$background" px="$4" pt="$4">
+    <YStack f={1} bg="$background" px="$4" pt="$4" position="relative">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ alignItems: 'center', paddingBottom: 32, gap: 16 }}
@@ -161,9 +163,31 @@ export default function SessionsHistoryScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <YStack w={358} gap="$1" mb="$2">
+        <YStack w={358} gap="$2" mb="$2">
           <Text fontSize={24} fontWeight="700" color="$color">{t('history.title')}</Text>
           <Text fontSize={12} color="$gray10">{t('history.subtitle')}</Text>
+          {history.length > 0 ? (
+            <Button
+              unstyled
+              mt="$2"
+              h={44}
+              borderRadius={10}
+              borderWidth={1}
+              borderColor="$primary"
+              bg="rgba(46,204,113,0.08)"
+              ai="center"
+              jc="center"
+              onPress={() => setExportOpen(true)}
+              pressStyle={{ opacity: 0.9 }}
+            >
+              <XStack ai="center" gap="$2">
+                <FileDown size={18} color="$primary" />
+                <Text fontSize={14} fontWeight="700" color="$primary">
+                  {t('history.export', 'Export file')}
+                </Text>
+              </XStack>
+            </Button>
+          ) : null}
         </YStack>
 
         {loading && (
@@ -189,7 +213,7 @@ export default function SessionsHistoryScreen() {
           const summary = `${formatSessionDate(dateForSummary, i18n.language)} ${BULLET} ${participantsLabel}`;
           const totalAmount = bill.grandTotal ?? 0;
           const currency = bill.currency || bill.totals?.currency || bill.payload?.totals?.currency || DEFAULT_CURRENCY;
-          const amountLabel = `${currency} ${totalAmount.toLocaleString()}`;
+          const amountLabel = formatCurrencyAmount(totalAmount, currency);
           return (
             <HistoryCard
               key={bill.sessionId}
@@ -207,6 +231,13 @@ export default function SessionsHistoryScreen() {
           );
         })}
       </ScrollView>
+
+      <ExportHistoryModal
+        visible={exportOpen}
+        onClose={() => setExportOpen(false)}
+        entries={history}
+        scope="all"
+      />
     </YStack>
   );
 }

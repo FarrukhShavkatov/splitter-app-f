@@ -51,6 +51,7 @@
     "requests": "リクエスト",
     "add": "友だちを追加",
     "empty": "まだ友だちがいません。+ をタップして追加しましょう。",
+    "incomingSection": "受信リクエスト",
     "searchPlaceholder": "ユーザーIDまたはユーザー名を入力",
     "send": "リクエストを送信",
     "remove": "削除",
@@ -78,8 +79,12 @@
       "inviteFailed": "招待を送信できませんでした"
     },
     "requestsScreen": {
+      "title": "友だちリクエスト",
+      "hint": "下のリクエストで承認または拒否できます。ユーザー名やIDで検索して友だちを追加できます。",
       "accepted": "{{target}} を友だちに追加しました",
       "rejected": "{{target}} からのリクエストを拒否しました",
+      "acceptCta": "承認",
+      "rejectCta": "拒否",
       "tabOutgoing": "送信",
       "tabIncoming": "受信",
       "scanInvite": "招待をスキャン",
@@ -223,6 +228,24 @@
     "title": "通知",
     "empty": "通知はまだありません",
     "markAllRead": "すべて既読にする",
+    "types": {
+      "friendRequest": {
+        "title": "友だちリクエスト",
+        "body": "{{actor}}さんから友だちリクエストが届きました"
+      },
+      "sessionFinalized": {
+        "title": "明細が確定しました",
+        "body": "{{actor}}さんが「{{name}}」を確定しました — {{amount}}"
+      },
+      "debtReminder": {
+        "title": "お支払い金額",
+        "body": "「{{name}}」のお支払い額は {{amount}} です"
+      },
+      "paymentMarked": {
+        "title": "支払い済みが記録されました",
+        "body": "{{participant}}さんが「{{name}}」を支払い済みにしました"
+      }
+    },
     "time": {
       "justNow": "たった今",
       "minutesAgo": "{{count}}分前",
@@ -266,7 +289,8 @@
     "empty": "まだ履歴がありません",
     "participants": "{{count}} 人",
     "participants_one": "{{count}} 人",
-    "fallbackName": "明細"
+    "fallbackName": "明細",
+    "export": "ファイルを書き出す"
   },
   "settings": {
     "language": {
@@ -365,6 +389,11 @@
   },
   "sessions": {
     "participants": {
+      "title": "参加者を選択",
+      "hint": "ここで選んだ人だけが、確定後に通知を受け取り、履歴で明細を見られます。",
+      "finalizeHint": "通知はスキャン時ではなく、明細を確定した後に送られます。",
+      "selectedSummary": "選択中の参加者",
+      "minimumHint": "続けるには2人以上を選択してください。",
       "search": "検索…",
       "select": "選択",
       "selected": "選択済み",
@@ -386,6 +415,17 @@
       "deleteItem": "品目を削除",
       "saveItem": "保存",
       "saving": "保存中...",
+      "finalizeHint": "確定すると、選択した参加者に通知が届き、この明細が履歴に表示されます。",
+      "participantStatus": "参加者の状態",
+      "assignedState": "割当済み",
+      "unassignedState": "未割当",
+      "assignedUnits": "{{assigned}}/{{total}} 割当済み",
+      "remainingUnits_one": "残り 1 点を割り当ててください",
+      "remainingUnits_other": "残り {{count}} 点を割り当ててください",
+      "equalAssigned": "{{count}} 人に割り当て済み",
+      "equalSplitHint": "均等割後の金額:",
+      "countAssigned": "{{count}} 点を割り当て済み",
+      "perUnit": "1点あたり:",
       "equalSplit": "均等割",
       "byUnits": "数量ごと",
       "assignTo": "割り当て:",
@@ -447,6 +487,38 @@
     "payment": {
       "markedTitle": "支払い済みが記録されました"
     },
+    "export": {
+      "title": "明細履歴の書き出し",
+      "titleSingle": "この明細を書き出す",
+      "titleAll": "すべての明細を書き出す",
+      "button": "ファイルを書き出す",
+      "buttonSingle": "明細を書き出す",
+      "hint": "形式を選び、メール・チャット・クラウドで送れます。",
+      "exportedAt": "書き出し日時",
+      "bill": "明細",
+      "date": "日付",
+      "total": "合計",
+      "participants": "参加者",
+      "participant": "参加者",
+      "amount": "金額",
+      "status": "状態",
+      "items": "品目",
+      "itemName": "品名",
+      "itemShare": "分担額",
+      "footer": "レシートスプリッターから書き出し",
+      "filePrefix": "receipt-splitter",
+      "error": "ファイルを書き出せませんでした",
+      "formats": {
+        "pdf": "PDF",
+        "pdfDesc": "印刷・共有に最適。どのPDFビューアでも開けます。",
+        "csv": "CSV（Excel / スプレッドシート）",
+        "csvDesc": "Excel、Googleスプレッドシート、Numbersで開けます。",
+        "doc": "Word（.doc）",
+        "docDesc": "Microsoft Word、Googleドキュメント、Pagesで開けます。",
+        "txt": "テキスト",
+        "txtDesc": "メールやチャットにそのまま送れるシンプルな形式です。"
+      }
+    },
     "guide": {
       "title": "使い方ガイド",
       "subtitle": "レシート → 割り勘 → 共有 → 精算",
@@ -466,7 +538,9 @@
       "step7Title": "7. もう一度割り勘",
       "step7Body": "「もう一度」で同じメンバー・品目から新しい明細を始められます。",
       "step8Title": "8. グループ",
-      "step8Body": "グループ画面の「グループで割り勘」でメンバーをあらかじめ入れられます。"
+      "step8Body": "グループ画面の「グループで割り勘」でメンバーをあらかじめ入れられます。",
+      "step9Title": "9. 履歴の書き出し",
+      "step9Body": "明細履歴で「ファイルを書き出す」→ PDF・CSV・Word・テキストから選んで送信。"
     }
   },
   "inviteScan": {
