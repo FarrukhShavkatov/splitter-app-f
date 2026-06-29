@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { Platform } from 'react-native';
 import { getToken } from '@/shared/lib/utils/token-storage';
 import { emitUnauthorized } from '@/shared/api/auth-events';
 import { API_URL } from '@/shared/config/env';
@@ -22,18 +23,41 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use(async (config) => {
+  const isMultipartRequest =
+    typeof FormData !== 'undefined' && config.data instanceof FormData;
+
   try {
     const token = await getToken();
+    const headers: any = config.headers ?? {};
+
+    if (isMultipartRequest) {
+      // Browsers add the boundary themselves. React Native's native adapter
+      // needs the multipart marker and attaches the boundary while serializing.
+      if (Platform.OS !== 'web' && typeof headers.set === 'function') {
+        headers.set('Content-Type', 'multipart/form-data');
+      } else if (Platform.OS !== 'web') {
+        headers['Content-Type'] = 'multipart/form-data';
+      } else if (typeof headers.delete === 'function') {
+        headers.delete('Content-Type');
+      } else {
+        delete headers['Content-Type'];
+        delete headers['content-type'];
+      }
+    }
+
     if (token) {
-      const headers: any = config.headers ?? {};
       if (typeof headers.set === 'function') {
         headers.set('Authorization', `Bearer ${token}`);
-        headers.set('Content-Type', headers.get?.('Content-Type') ?? 'application/json');
+        if (!isMultipartRequest) {
+          headers.set('Content-Type', headers.get?.('Content-Type') ?? 'application/json');
+        }
       } else {
         config.headers = {
           ...headers,
           Authorization: `Bearer ${token}`,
-          'Content-Type': headers['Content-Type'] ?? 'application/json',
+          ...(isMultipartRequest
+            ? {}
+            : { 'Content-Type': headers['Content-Type'] ?? 'application/json' }),
         };
       }
     }
@@ -217,9 +241,7 @@ export interface UploadAvatarResponse {
 }
 
 export async function uploadAvatar(formData: FormData): Promise<UploadAvatarResponse> {
-  const { data } = await apiClient.post<UploadAvatarResponse>('/uploads/avatar', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const { data } = await apiClient.post<UploadAvatarResponse>('/uploads/avatar', formData);
   return data;
 }
 

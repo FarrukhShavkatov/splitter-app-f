@@ -3,6 +3,7 @@ import { Alert, Animated, KeyboardAvoidingView, Platform, ScrollView, TextInputP
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { YStack, XStack, Text, Button, Separator, Spinner } from 'tamagui';
 import { Copy, LogOut, Upload, RotateCcw, CheckCircle, User as UserIcon, Mail, Lock, Edit3, X, Check, Languages } from '@tamagui/lucide-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,6 +26,9 @@ const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
   aspect: [1, 1],
   quality: 0.9,
 };
+
+const AVATAR_MAX_DIMENSION = 1024;
+const AVATAR_JPEG_QUALITY = 0.82;
 
 interface SectionCardProps {
   title: string;
@@ -453,13 +457,25 @@ export default function ProfileScreen() {
         throw new Error(t('profile.alerts.imageMissing', 'Image file is missing a URI.'));
       }
 
+      const resizeOperations =
+        Math.max(asset.width || 0, asset.height || 0) > AVATAR_MAX_DIMENSION
+          ? [
+              asset.width >= asset.height
+                ? { resize: { width: AVATAR_MAX_DIMENSION } }
+                : { resize: { height: AVATAR_MAX_DIMENSION } },
+            ]
+          : [];
+      const preparedImage = await manipulateAsync(asset.uri, resizeOperations, {
+        compress: AVATAR_JPEG_QUALITY,
+        format: SaveFormat.JPEG,
+      });
+
       const formData = new FormData();
-      const mimeType = asset.mimeType ?? 'image/jpeg';
-      const extension = mimeType.split('/').pop() || 'jpg';
-      const fileName = asset.fileName ?? `avatar.${extension}`;
+      const mimeType = 'image/jpeg';
+      const fileName = 'avatar.jpg';
 
       if (Platform.OS === 'web') {
-        const response = await fetch(asset.uri);
+        const response = await fetch(preparedImage.uri);
         if (!response.ok) {
           throw new Error(
             t('profile.alerts.uploadReadFailed', 'Unable to read the selected file for upload.')
@@ -469,7 +485,7 @@ export default function ProfileScreen() {
         formData.append('file', blob, fileName);
       } else {
         formData.append('file', {
-          uri: asset.uri,
+          uri: preparedImage.uri,
           name: fileName,
           type: mimeType,
         } as any);

@@ -14,6 +14,7 @@ import uploadsRoutes from "./routes/uploads.js";
 import { logAuthAttempts } from "./middleware/logAuth.js";
 import debugRoutes from "./routes/debug.js";
 import { validateBackendEnv } from "./config/env.js";
+import { getLocalMediaRoot, LOCAL_MEDIA_ROUTE } from "./services/avatarStorage.js";
 
 // Load backend/.env for local npm development. Docker Compose injects the same
 // variables through its environment block.
@@ -33,6 +34,14 @@ const app = express();
 // Default increased from Express ~100kb to 4mb to fit ~3MB binary image (base64 expands ~33%).
 const JSON_LIMIT = env.jsonBodyLimit;
 app.use(express.json({ limit: JSON_LIMIT }));
+app.use(
+  LOCAL_MEDIA_ROUTE,
+  express.static(getLocalMediaRoot(), {
+    immutable: true,
+    maxAge: "1y",
+    fallthrough: false,
+  })
+);
 
 // Configure CORS with long preflight caching and multiple origins support
 const allowAllCors = env.allowAllCors;

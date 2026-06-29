@@ -1,9 +1,9 @@
 import { Router } from "express";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import multer from "multer";
 import { authenticateToken } from "../middleware/auth.js";
-import { uploadAvatarObject } from "../config/r2.js";
 import { prisma } from "../config/prisma.js";
+import { storeAvatarObject } from "../services/avatarStorage.js";
 
 type UploadFile = {
   fieldname: string;
@@ -32,15 +32,62 @@ const upload = multer({
   },
 });
 
-function pickExtByMime(
-  mime: string
-): ".webp" | ".jpg" | ".jpeg" | ".png" | ".gif" | null {
-  const m = mime.toLowerCase();
-  if (m === "image/webp") return ".webp";
-  if (m === "image/jpeg") return ".jpg";
-  if (m === "image/png") return ".png";
-  if (m === "image/gif") return ".gif";
+type SupportedImage = {
+  mime: "image/webp" | "image/jpeg" | "image/png" | "image/gif";
+  ext: ".webp" | ".jpg" | ".png" | ".gif";
+};
+
+function detectImageType(buffer: Buffer): SupportedImage | null {
+  if (
+    buffer.length >= 3 &&
+    buffer[0] === 0xff &&
+    buffer[1] === 0xd8 &&
+    buffer[2] === 0xff
+  ) {
+    return { mime: "image/jpeg", ext: ".jpg" };
+  }
+  if (
+    buffer.length >= 8 &&
+    buffer
+      .subarray(0, 8)
+      .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+  ) {
+    return { mime: "image/png", ext: ".png" };
+  }
+  if (buffer.length >= 6) {
+    const signature = buffer.subarray(0, 6).toString("ascii");
+    if (signature === "GIF87a" || signature === "GIF89a") {
+      return { mime: "image/gif", ext: ".gif" };
+    }
+  }
+  if (
+    buffer.length >= 12 &&
+    buffer.subarray(0, 4).toString("ascii") === "RIFF" &&
+    buffer.subarray(8, 12).toString("ascii") === "WEBP"
+  ) {
+    return { mime: "image/webp", ext: ".webp" };
+  }
   return null;
+}
+
+function uploadSingleFile(req: Request, res: Response, next: NextFunction) {
+  upload.single("file")(req, res, (error: unknown) => {
+    if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
+      res.status(413).json({ error: "Avatar image is too large" });
+      return;
+    }
+    if (error) {
+      next(error);
+      return;
+    }
+    next();
+  });
+}
+
+function getPublicOrigin(req: Request): string {
+  const configuredOrigin = (process.env.PUBLIC_API_URL || "").replace(/\/$/, "");
+  if (configuredOrigin) return configuredOrigin;
+  return `${req.protocol}://${req.get("host")}`;
 }
 
 /**
@@ -100,7 +147,7 @@ function pickExtByMime(
 router.post(
   "/avatar",
   authenticateToken,
-  upload.single("file"),
+  uploadSingleFile,
   async (req: Request, res: Response) => {
     try {
       if (!req.user) {
@@ -113,24 +160,27 @@ router.post(
         return;
       }
 
-      const { buffer, mimetype, size } = file;
+      const { buffer, size } = file;
       const maxBytes = Number(process.env.AVATAR_MAX_BYTES || 2 * 1024 * 1024);
       if (size > maxBytes) {
         res.status(413).json({ error: "File too large" });
         return;
       }
 
-      const ext = pickExtByMime(mimetype);
-      if (!ext) {
-        res.status(400).json({ error: "Unsupported image type" });
+      const imageType = detectImageType(buffer);
+      if (!imageType) {
+        res.status(400).json({ error: "Unsupported or invalid image file" });
         return;
       }
 
-      // Build version from current timestamp seconds for simplicity
-      const v = Math.floor(Date.now() / 1000);
-      const key = `avatars/${req.user.id}/v${v}/avatar${ext}`;
+      const key = `avatars/${req.user.id}/v${Date.now()}/avatar${imageType.ext}`;
 
-      const put = await uploadAvatarObject(key, buffer, mimetype);
+      const put = await storeAvatarObject(
+        key,
+        buffer,
+        imageType.mime,
+        getPublicOrigin(req)
+      );
 
       // Persist URL to user
       await prisma.user.update({
